@@ -1,7 +1,7 @@
 package main
 
 import (
-	"asasfans/internal/app/asasapi/router"
+	"asasfans/internal/app"
 	"asasfans/internal/launcher"
 	"asasfans/internal/pkg/database"
 	"asasfans/internal/pkg/httpserver"
@@ -16,7 +16,7 @@ func main() {
 		return fx.Options(
 			database.Provide(),
 			httpserver.Provide(),
-			fx.Provide(router.InitRouters),
+			app.Provide(),
 			fx.Invoke(func(lifecycle fx.Lifecycle, ginServer *httpserver.Server) {
 				lifecycle.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
