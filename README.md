@@ -56,7 +56,7 @@ cd asasfans-api
 docker build --rm -t asasfans-api:latest -f builder/asasapi/Dockerfile .
 
 # copy config file 并自行修改相关配置
-cp config/config.template.yml config/config.yml
+cp config/config.template.yml config/asasapi.yml
 
 # docker run
 docker run \
