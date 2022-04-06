@@ -1,0 +1,20 @@
+http:
+  mode: debug # debug, test, release
+  port: 8080
+db:
+  type: mysql # mysql
+  dsn: USER:PASSWORD@tcp(HOST:PORT)/DATABASE?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
+  debug: true
+  setMaxIdleConns: 2 # 设置空闲连接池中连接的最大数量
+  setMaxOpenConns: 4 # 设置打开数据库连接的最大数量
+  setConnMaxLifetime: 6 # 设置了连接可复用的最大时间 单位分钟
+cache:
+  defaultExpiration: 0 # 默认缓存过期时间 单位 秒 0 永不过期
+  cleanupInterval: 600 # 清理过期缓存间隔 单位 秒 0 不自动清理
+log:
+  filename: /tmp/open.log
+  maxSize: 500
+  maxBackups: 3
+  maxAge: 3
+  level: "debug"
+  stdout: true
