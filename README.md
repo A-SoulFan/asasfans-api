@@ -33,12 +33,37 @@ asasfans api支持
 
 ## 开始
 
+### 本地运行
+
 ```shell
-# clone 代码仓库
+# clone repository
 git clone git@github.com:A-SoulFan/asasfans-api.git
 
 # download go mod 
 cd asasfans-api && go mod download
+```
+
+### Docker builder
+
+```shell
+# clone repository
+git clone git@github.com:A-SoulFan/asasfans-api.git
+
+cd asasfans-api
+
+# docker builder
+# 如果在 CN 进行 build 请自行将 Dockerfile 中注释的镜像源相关行开启
+docker build --rm -t asasfans-api:latest -f builder/asasapi/Dockerfile .
+
+# copy config file 并自行修改相关配置
+cp config/config.template.yml config/config.yml
+
+# docker run
+docker run \
+  --detach \
+  --name asasfans-api \
+  --volume $PWD/config:/config \
+  asasfans-api:latest
 ```
 
 ## 开发者规范
