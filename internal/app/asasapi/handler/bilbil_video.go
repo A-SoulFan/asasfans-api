@@ -1,10 +1,11 @@
 package handler
 
 import (
-	"asasfans/internal/app/asasapi/help"
-	"asasfans/internal/app/asasapi/idl"
-	"asasfans/internal/app/asasapi/service"
 	"net/http"
+
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/help"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/service"
 
 	"github.com/gin-gonic/gin"
 )

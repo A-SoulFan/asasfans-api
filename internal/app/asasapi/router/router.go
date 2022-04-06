@@ -1,9 +1,9 @@
 package router
 
 import (
-	"asasfans/internal/app/asasapi/handler"
-	"asasfans/internal/app/asasapi/service"
-	"asasfans/internal/pkg/httpserver"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/handler"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/service"
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/httpserver"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"

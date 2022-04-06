@@ -1,9 +1,10 @@
 package launcher
 
 import (
-	"asasfans/internal/pkg/log"
 	"flag"
 	"fmt"
+
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/log"
 
 	"github.com/spf13/viper"
 	"go.uber.org/fx"

@@ -1,12 +1,13 @@
 package service
 
 import (
-	"asasfans/internal/app/asasapi/apperrors"
-	"asasfans/internal/app/asasapi/idl"
-	"asasfans/internal/app/asasapi/repository"
-	"asasfans/internal/app/asasapi/util/query_parser"
 	"context"
 	"strings"
+
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/apperrors"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
 
 	"gorm.io/gorm"
 )

@@ -1,11 +1,12 @@
 package main
 
 import (
-	"asasfans/internal/app"
-	"asasfans/internal/launcher"
-	"asasfans/internal/pkg/database"
-	"asasfans/internal/pkg/httpserver"
 	"context"
+
+	"github.com/A-SoulFan/asasfans-api/internal/app"
+	"github.com/A-SoulFan/asasfans-api/internal/launcher"
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/database"
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/httpserver"
 
 	"github.com/spf13/viper"
 	"go.uber.org/fx"

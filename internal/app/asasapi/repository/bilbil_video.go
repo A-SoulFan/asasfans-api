@@ -1,9 +1,10 @@
 package repository
 
 import (
-	"asasfans/internal/app/asasapi/idl"
-	"asasfans/internal/app/asasapi/util/query_parser"
 	"fmt"
+
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"

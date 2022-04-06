@@ -1,6 +1,6 @@
 package idl
 
-import "asasfans/internal/app/asasapi/util/query_parser"
+import "github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
 
 type BilbilVideoSearchReq struct {
 	Order BilbilVideoOrder `form:"order" binding:"required,oneof=pubdate view score"`

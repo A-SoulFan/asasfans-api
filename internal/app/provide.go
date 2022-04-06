@@ -1,8 +1,8 @@
 package app
 
 import (
-	"asasfans/internal/app/asasapi/router"
-	"asasfans/internal/app/asasapi/service"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/router"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/service"
 
 	"go.uber.org/fx"
 )
