@@ -49,5 +49,7 @@ const (
 )
 
 type BilbilVideoRepository interface {
+	Create(e *BilbilVideo) error
+
 	Search(queryItems []query_parser.QueryItem, order BilbilVideoOrder, page, size int64) (list []*BilbilVideo, total int64, err error)
 }

@@ -2,9 +2,11 @@ package repository
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
+	"gorm.io/gorm/clause"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -74,4 +76,37 @@ func builderQueryItems(tx *gorm.DB, queryItems []query_parser.QueryItem, rename 
 	}
 
 	return tx
+}
+
+func (impl *BilbilVideoMysqlImpl) Create(e *idl.BilbilVideo) error {
+	return impl.tx.Transaction(func(_tx *gorm.DB) error {
+		result := _tx.Table(bilbilVideoTableName).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "bvid"}},
+			UpdateAll: true,
+		}).Create(&e)
+
+		if result.Error != nil {
+			return errors.Wrap(result.Error, fmt.Sprintf("insert %s fail", bilbilVideoTableName))
+		}
+
+		tags := strings.Split(e.Tag, ",")
+		for _, tag := range tags {
+			result = _tx.Table(bilbilVideoTagTableName).Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "bvid"}},
+				DoNothing: true,
+			}).Create(struct {
+				Bvid string
+				Tag  string
+			}{
+				Bvid: e.Bvid,
+				Tag:  tag,
+			})
+
+			if result.Error != nil {
+				return errors.Wrap(result.Error, fmt.Sprintf("insert %s fail", bilbilVideoTagTableName))
+			}
+		}
+
+		return nil
+	})
 }
