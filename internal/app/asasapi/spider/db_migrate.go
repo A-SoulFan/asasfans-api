@@ -108,7 +108,7 @@ func tagStrToSlice(tagStr, title string) []string {
 
 	tags := make([]string, 0, 5)
 	for _, tag := range strings.Split(tagStr, ",") {
-		if len(tag) > 30 {
+		if l := len(tag); l < 1 || l > 30 {
 			continue
 		}
 
