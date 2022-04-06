@@ -19,14 +19,13 @@ jobs:
         id: tag
         uses: dawidd6/action-get-tag@v1
       - name: Login to image-repository , build and push
-        uses: azure/docker-login@v1
+        uses: docker/login-action@v1
         with:
-         login-server: ${{ secrets.ACR_ENDPOINT }}
-         username: ${{ secrets.ACR_USERNAME }}
-         password: ${{ secrets.ACR_PASSWORD }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
          
       - run: |
-         docker build -f ./builder/asasapi/Dockerfile . -t ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
-         docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
-         docker tag ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }} ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:latest
-         docker push ${{ secrets.ACR_ENDPOINT }}/${{ env.IMAGE_NAME }}:latest
+         docker build -f ./builder/asasapi/Dockerfile . -t ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+         docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }}
+         docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.tag }} ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+         docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
