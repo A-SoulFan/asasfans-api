@@ -1,6 +1,9 @@
 package idl
 
-import "github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
+import (
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
+	"time"
+)
 
 type BilbilVideoSearchReq struct {
 	Order BilbilVideoOrder `form:"order" binding:"required,oneof=pubdate view score"`
@@ -50,6 +53,6 @@ const (
 
 type BilbilVideoRepository interface {
 	Create(e *BilbilVideo) error
-
 	Search(queryItems []query_parser.QueryItem, order BilbilVideoOrder, page, size int64) (list []*BilbilVideo, total int64, err error)
+	Read(from time.Time, to time.Time) ([]*BilbilVideo, error)
 }
