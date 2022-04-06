@@ -20,7 +20,8 @@ func main() {
 			fx.Invoke(func(lifecycle fx.Lifecycle, spiderVideo *spider.Video) {
 				lifecycle.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
-						return spiderVideo.Run()
+						spiderVideo.Run()
+						return nil
 					},
 					OnStop: func(ctx context.Context) error {
 						return spiderVideo.Stop()

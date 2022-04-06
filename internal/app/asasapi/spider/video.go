@@ -59,7 +59,7 @@ func (v *Video) stop(ctx context.Context) error {
 	return nil
 }
 
-func (v *Video) Run() error {
+func (v *Video) Run() {
 	go func() {
 		err := v.run((*time.Ticker)(time.NewTimer(time.Hour)))
 		if err != nil {
@@ -68,8 +68,6 @@ func (v *Video) Run() error {
 	}()
 
 	go v.awaitSignal()
-
-	return nil
 }
 
 func (v *Video) awaitSignal() {
@@ -139,26 +137,26 @@ func (v *Video) spider() error {
 				}
 				sInfo.Tag = strings.Join(tags, ",")
 
-				if err := v.insertDB(info, &sInfo); err != nil {
+				if err := insertDB(v.db.WithContext(context.TODO()), info, sInfo.Tag); err != nil {
 					v.logger.Error("insertDB error", zap.String("bvid", sInfo.Bvid))
 					_, _ = failBvFile.WriteString(sInfo.Bvid + "\n")
 				}
 
-				time.Sleep(time.Second)
+				time.Sleep(500 * time.Millisecond)
 			}
 
 			if p >= totalPage {
 				break
 			}
 
-			time.Sleep(time.Second)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 
 	return nil
 }
 
-func (v *Video) insertDB(info *bilbil.VideoInfoResponse, sInfo *bilbil.VideoSearchInfo) error {
+func insertDB(tx *gorm.DB, info *bilbil.VideoInfoResponse, strTag string) error {
 	e := &idl.BilbilVideo{
 		Bvid:      info.Bvid,
 		Aid:       uint64(info.Aid),
@@ -171,7 +169,7 @@ func (v *Video) insertDB(info *bilbil.VideoInfoResponse, sInfo *bilbil.VideoSear
 		Title:     info.Title,
 		Desc:      info.Desc,
 		Pic:       info.Pic,
-		Tag:       sInfo.Tag,
+		Tag:       strTag,
 		Pubdate:   uint64(info.Pubdate),
 		Duration:  strconv.Itoa(info.Duration),
 		View:      uint64(info.Stat.View),
@@ -184,7 +182,7 @@ func (v *Video) insertDB(info *bilbil.VideoInfoResponse, sInfo *bilbil.VideoSear
 		Score:     calculateScore(info),
 	}
 
-	if err := repository.NewBilbilVideo(v.db.WithContext(context.TODO())).Create(e); err != nil {
+	if err := repository.NewBilbilVideo(tx).Create(e); err != nil {
 		return err
 	}
 
