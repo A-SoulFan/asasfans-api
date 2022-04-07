@@ -50,12 +50,7 @@ func (impl *BilbilVideoMysqlImpl) FindAllByPubDate(from, to time.Time, page, siz
 }
 
 func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, order idl.BilbilVideoOrder, page, size int64) (list []*idl.BilbilVideo, total int64, err error) {
-	renameMap := map[string]string{
-		"tag": fmt.Sprintf("%s.tag", bilbilVideoTagTableName),
-	}
-
-	resp := builderQueryItems(impl.tx, queryItems, renameMap).Table(bilbilVideoTableName).
-		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.v_id = %s.id", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
+	resp := builderQueryItems(impl.tx, queryItems).Table(bilbilVideoTableName).
 		Select(fmt.Sprintf("%s.*", bilbilVideoTableName)).
 		Order(fmt.Sprintf("%s DESC", order)).
 		Offset(int((page - 1) * size)).Limit(int(size)).
@@ -65,8 +60,7 @@ func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, or
 		return nil, 0, errors.Wrap(resp.Error, fmt.Sprintf("select from %s error", bilbilVideoTableName))
 	}
 
-	resp = builderQueryItems(impl.tx, queryItems, renameMap).Table(bilbilVideoTableName).
-		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.v_id = %s.id", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
+	resp = builderQueryItems(impl.tx, queryItems).Table(bilbilVideoTableName).
 		Select(fmt.Sprintf("%s.id", bilbilVideoTableName)).
 		Count(&total)
 
@@ -77,25 +71,22 @@ func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, or
 	return list, total, nil
 }
 
-func builderQueryItems(tx *gorm.DB, queryItems []query_parser.QueryItem, rename map[string]string) *gorm.DB {
+func builderQueryItems(tx *gorm.DB, queryItems []query_parser.QueryItem) *gorm.DB {
 	for _, item := range queryItems {
-		key := item.Key
-
-		if rename != nil {
-			if newKey, ok := rename[key]; ok {
-				key = newKey
-			}
+		if strings.ToLower(item.Key) == "tag" {
+			tx = tx.Where(fmt.Sprintf("%s.id IN (SELECT v_id FROM %s WHERE tag IN (?)) ", bilbilVideoTableName, bilbilVideoTagTableName), item.Values)
+			continue
 		}
 
 		switch item.Type {
 		case query_parser.TypeAND:
 			for _, value := range item.Values {
-				tx = tx.Where(fmt.Sprintf("%s = ?", key), value)
+				tx = tx.Where(fmt.Sprintf("%s = ?", item.Key), value)
 			}
 		case query_parser.TypeOR:
-			tx = tx.Where(fmt.Sprintf("%s IN (?)", key), item.Values)
+			tx = tx.Where(fmt.Sprintf("%s IN (?)", item.Key), item.Values)
 		case query_parser.TypeBetween:
-			tx = tx.Where(fmt.Sprintf("%s BETWEEN ? AND ?", key), item.GetBetweenValues())
+			tx = tx.Where(fmt.Sprintf("%s BETWEEN ? AND ?", item.Key), item.GetBetweenValues())
 		}
 	}
 

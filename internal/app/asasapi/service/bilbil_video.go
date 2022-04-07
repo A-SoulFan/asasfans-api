@@ -15,7 +15,7 @@ import (
 const (
 	defaultQuerySize = 20
 
-	allowKeyItems = "tag,name,mid,"
+	allowKeyItems = "tag,name,mid"
 )
 
 type BilbilVideo struct {
