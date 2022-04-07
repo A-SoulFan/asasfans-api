@@ -70,9 +70,7 @@ func (m *DBMigrate) run() {
 		}
 
 		bvidList := make([]string, 0, size)
-		bvMap := make(map[string]oldInfo, 0)
 		for _, info := range list {
-			bvMap[info.Bvid] = info
 			bvidList = append(bvidList, info.Bvid)
 		}
 
@@ -82,9 +80,17 @@ func (m *DBMigrate) run() {
 
 		oList := make([]oldInfo, 0, 100)
 		if tx.Table("bilbil_asoul_video").Where("bvid IN (?)", bvidList).Select("bvid").Find(&inList).Error == nil {
-			for _, e := range inList {
-				if oInfo, ok := bvMap[e.Bvid]; !ok {
-					oList = append(oList, oInfo)
+			for _, info := range list {
+				var hit bool
+				for _, e := range inList {
+					if e.Bvid == info.Bvid {
+						hit = true
+						break
+					}
+				}
+
+				if !hit {
+					oList = append(oList, info)
 				}
 			}
 		}
