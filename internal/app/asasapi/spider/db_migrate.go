@@ -73,7 +73,7 @@ func (m *DBMigrate) run() {
 				if bInfo, err = m.sdk.VideoWebInfo(info.Bvid); err != nil {
 					break
 				}
-				time.Sleep(time.Duration(retry) * 300 * time.Millisecond)
+				time.Sleep(time.Duration(retry) * 800 * time.Millisecond)
 			}
 
 			if err != nil || bInfo == nil {
