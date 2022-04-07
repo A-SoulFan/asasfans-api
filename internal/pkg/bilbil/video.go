@@ -220,6 +220,16 @@ type VideoTagInfo struct {
 	JumpUrl         string `json:"jump_url"`
 }
 
+type VideoTagResponse []VideoTagInfo
+
+func (vtr VideoTagResponse) ToTagStringSlice() []string {
+	list := make([]string, 0, 10)
+	for _, info := range vtr {
+		list = append(list, info.TagName)
+	}
+	return list
+}
+
 func (sdk *SDK) fastGet(url string, data interface{}) error {
 	result := &ResponseBasic{Data: &data}
 
@@ -264,7 +274,7 @@ func (sdk *SDK) VideoWebInfo(bvid string) (data *VideoInfoResponse, err error) {
 	return data, nil
 }
 
-func (sdk SDK) VideoWebTagInfo(aid string) (data []*VideoTagInfo, err error) {
+func (sdk SDK) VideoWebTagInfo(aid string) (data *VideoTagResponse, err error) {
 	if err = sdk.fastGet(fmt.Sprintf(webVideoTagInfoURL, aid), &data); err != nil {
 		return nil, err
 	}

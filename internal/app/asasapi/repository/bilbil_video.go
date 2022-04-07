@@ -26,13 +26,27 @@ type BilbilVideoMysqlImpl struct {
 	tx *gorm.DB
 }
 
-func (impl *BilbilVideoMysqlImpl) Read(from time.Time, to time.Time) ([]*idl.BilbilVideo, error) {
-	var result []*idl.BilbilVideo
-	impl.tx.Table(bilbilVideoTableName).Where("Pubdate >= ? AND Pubdate <= ?", from.Second(), to).Find(&result)
+func (impl *BilbilVideoMysqlImpl) FindAllByPubDate(from, to time.Time, page, size int64) (list []*idl.BilbilVideo, total int64, err error) {
+	result := impl.tx.Table(bilbilVideoTableName).
+		Where("pubdate >= ? AND pubdate <= ?", from.Unix(), to.Unix()).
+		Offset(int((page - 1) * size)).Limit(int(size)).
+		Order("pubdate DESC").
+		Find(&list)
+
 	if result == nil {
-		return nil, fmt.Errorf("no data found")
+		return nil, 0, errors.Wrap(result.Error, fmt.Sprintf("select from %s error", bilbilVideoTableName))
 	}
-	return result, nil
+
+	result = impl.tx.Table(bilbilVideoTableName).
+		Select("id").
+		Where("pubdate >= ? AND pubdate <= ?", from.Second(), to).
+		Count(&total)
+
+	if result == nil {
+		return nil, 0, errors.Wrap(result.Error, fmt.Sprintf("count from %s error", bilbilVideoTableName))
+	}
+
+	return list, total, nil
 }
 
 func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, order idl.BilbilVideoOrder, page, size int64) (list []*idl.BilbilVideo, total int64, err error) {
@@ -115,39 +129,6 @@ func (impl *BilbilVideoMysqlImpl) Create(e *idl.BilbilVideo) error {
 			}
 		}
 
-		return nil
-	})
-}
-
-func (impl *BilbilVideoMysqlImpl) Replace(e *idl.BilbilVideo, timeLimit time.Time) error {
-	updatedTime := time.Now().Sub(timeLimit)
-	utime := uint64(updatedTime.Seconds())
-	return impl.tx.Transaction(func(_tx *gorm.DB) error {
-		result := _tx.Table(bilbilVideoTableName).Where("pubdate > ?", utime).Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "bvid"}},
-			UpdateAll: true,
-		}).Create(&e)
-
-		if result.Error != nil {
-			return errors.Wrap(result.Error, fmt.Sprintf("insert %s fail", bilbilVideoTableName))
-		}
-
-		tags := strings.Split(e.Tag, ",")
-		for _, tag := range tags {
-			result = _tx.Table(bilbilVideoTagTableName).Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "bvid"}},
-				DoNothing: true,
-			}).Create(struct {
-				Bvid string
-				Tag  string
-			}{
-				Bvid: e.Bvid,
-				Tag:  tag})
-
-			if result.Error != nil {
-				return errors.Wrap(result.Error, fmt.Sprintf("insert %s fail", bilbilVideoTagTableName))
-			}
-		}
 		return nil
 	})
 }

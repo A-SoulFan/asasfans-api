@@ -2,22 +2,15 @@ package spider
 
 import (
 	"context"
-	"os"
-	"os/signal"
+	"fmt"
 	"strconv"
-	"syscall"
 	"time"
 
-	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilbil"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
-)
-
-const (
-	failUpdateByListFilename = "fail_update_bv_list.log"
 )
 
 type Update struct {
@@ -62,23 +55,7 @@ func (u *Update) Run() error {
 		}
 	}()
 
-	go u.awaitSignal()
-
 	return nil
-}
-
-func (u *Update) awaitSignal() {
-	c := make(chan os.Signal, 1)
-	signal.Reset(syscall.SIGTERM, syscall.SIGINT)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
-	select {
-	case s := <-c:
-		u.logger.Info("receive server signal", zap.String("signal", s.String()))
-		if err := u.Stop(); err != nil {
-			u.logger.Warn("stop spider server error", zap.Error(err))
-		}
-		os.Exit(0)
-	}
 }
 
 func (u *Update) run(tk *time.Ticker) error {
@@ -99,100 +76,44 @@ func (u *Update) run(tk *time.Ticker) error {
 }
 
 func (u *Update) spider() error {
-	//get time three days ago
-	repo := repository.NewBilbilVideo(u.db)
-	data, err := repo.Read(time.Now().AddDate(0, 0, -3), time.Now())
-	if err != nil {
-		return err
-	}
-	bvList := getUpdateBVList(data)
-	for _, bv := range bvList {
-		//获取普通视频信息
-		webInfos, err := u.sdk.VideoWebInfo(bv)
+	repo := repository.NewBilbilVideo(u.db.WithContext(context.TODO()))
+
+	size := 100
+	for p := 1; true; p++ {
+		list, _, err := repo.FindAllByPubDate(time.Now().Add(-(3 * 24 * time.Hour)), time.Now(), int64(p), int64(size))
 		if err != nil {
-			u.logger.Error("get video web info error", zap.Error(err))
-			continue
+			u.logger.Error("FindAllByPubDate error", zap.Int("page", p), zap.Error(err))
+			return nil
 		}
-		tagInfos, err := u.sdk.VideoWebTagInfo(strconv.Itoa(webInfos.Aid))
-		strTags := getStrTags(tagInfos)
-		//获取tag信息
-		if err := u.updateDB(webInfos, strTags); err != nil {
-			u.logger.Error("insertDB error", zap.String("bid", webInfos.Bvid), zap.Error(err))
+
+		for _, video := range list {
+			time.Sleep(400 * time.Millisecond)
+			// 获取视频信息
+			vInfo, err := u.sdk.VideoWebInfo(video.Bvid)
+			if err != nil {
+				u.logger.Error("get video web info error", zap.String("bvid", video.Bvid), zap.Error(err))
+				continue
+			}
+
+			time.Sleep(200 * time.Millisecond)
+			var tags []string
+			// 获取视频 tag
+			tagInfos, err := u.sdk.VideoWebTagInfo(strconv.Itoa(vInfo.Aid))
+			// tag 错误的情况下 不更新
+			if err != nil {
+				u.logger.Error("get video web tag error", zap.String("bvid", video.Bvid), zap.Error(err))
+				tags = make([]string, 0)
+			}
+			tags = tagInfos.ToTagStringSlice()
+
+			// TODO: insertDB
+			fmt.Println(tags)
 		}
-	}
-	return nil
-}
 
-func getStrTags(infos []*bilbil.VideoTagInfo) string {
-	var result string
-	for _, info := range infos {
-		result += info.TagName + ","
-	}
-	return result
-}
-
-func (u *Update) updateDB(info *bilbil.VideoInfoResponse, strTags string) error {
-	e := &idl.BilbilVideo{
-		Bvid:      info.Bvid,
-		Aid:       uint64(info.Aid),
-		Name:      info.Owner.Name,
-		Mid:       uint64(info.Owner.Mid),
-		Face:      info.Owner.Face,
-		Tid:       uint64(info.Tid),
-		Tname:     info.Tname,
-		Copyright: uint64(info.Copyright),
-		Title:     info.Title,
-		Desc:      info.Desc,
-		Pic:       info.Pic,
-		Tag:       strTags,
-		Pubdate:   uint64(info.Pubdate),
-		Duration:  strconv.Itoa(info.Duration),
-		View:      uint64(info.Stat.View),
-		Danmaku:   uint64(info.Duration),
-		Reply:     uint64(info.Stat.Reply),
-		Favorite:  uint64(info.Stat.Favorite),
-		Coin:      uint64(info.Stat.Coin),
-		Share:     uint64(info.Stat.Share),
-		Like:      uint64(info.Stat.Like),
-		Score:     calculateScore(info),
-	}
-
-	if err := repository.NewBilbilVideo(u.db.WithContext(context.TODO())).Create(e); err != nil {
-		return err
+		if len(list) < size {
+			break
+		}
 	}
 
 	return nil
 }
-
-func getUpdateBVList(videos []*idl.BilbilVideo) []string {
-	result := make([]string, 0)
-	for _, v := range videos {
-		result = append(result, v.Bvid)
-	}
-	return result
-}
-
-//func calculateScore(info *bilbil.VideoInfoResponse) uint64 {
-//	score := float64(info.Stat.View)*0.25 +
-//		float64(info.Stat.Like+info.Stat.Coin+info.Stat.Reply+info.Stat.Like)*0.4 +
-//		float64(info.Stat.Favorite)*0.3 +
-//		float64(info.Stat.Share)*0.6
-//	return uint64(score)
-//}
-//
-//// isSkip 判断是否需要跳过此条
-//func isSkip(sInfo bilbil.VideoSearchInfo, keyword string) bool {
-//	tags := strings.Split(sInfo.Tag, ",")
-//	// 如果 用户昵称存在 keyword 则进一步检查 tag 是否具有 keyword
-//	// 防止错误的收录不属于 keyword 的内容
-//	if strings.Index(sInfo.Author, keyword) != -1 {
-//		for _, tag := range tags {
-//			if tag == keyword {
-//				return false
-//			}
-//		}
-//		return true
-//	}
-//
-//	return false
-//}
