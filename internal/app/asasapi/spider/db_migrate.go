@@ -97,14 +97,8 @@ func (m *DBMigrate) run() {
 
 		for _, info := range oList {
 			var bInfo *bilbil.VideoInfoResponse
-			for retry := 1; retry <= 3; retry++ {
-				time.Sleep(time.Duration(retry) * 400 * time.Millisecond)
-				if bInfo, err = m.sdk.VideoWebInfo(info.Bvid); err != nil {
-					break
-				}
-			}
-
-			if err != nil || bInfo == nil {
+			time.Sleep(400 * time.Millisecond)
+			if bInfo, err = m.sdk.VideoWebInfo(info.Bvid); err != nil || bInfo == nil {
 				_, _ = failBvFile.WriteString(fmt.Sprintf("%s,%s\n", info.Bvid, err.Error()))
 				m.logger.Warn("request VideoWebInfo fail", zap.String("bvid", info.Bvid), zap.Error(err))
 				continue
