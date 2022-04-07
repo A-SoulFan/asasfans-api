@@ -51,5 +51,6 @@ const (
 type BilbilVideoRepository interface {
 	Create(e *BilbilVideo) error
 
+	FindAllByBvidList(bvidList []string) (list []*BilbilVideo, err error)
 	Search(queryItems []query_parser.QueryItem, order BilbilVideoOrder, page, size int64) (list []*BilbilVideo, total int64, err error)
 }

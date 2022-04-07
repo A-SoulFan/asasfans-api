@@ -110,3 +110,12 @@ func (impl *BilbilVideoMysqlImpl) Create(e *idl.BilbilVideo) error {
 		return nil
 	})
 }
+
+func (impl *BilbilVideoMysqlImpl) FindAllByBvidList(bvidList []string) (list []*idl.BilbilVideo, err error) {
+	result := impl.tx.Table(bilbilVideoTableName).Where("bvid IN (?)", bvidList).Find(&list)
+	if result.Error != nil {
+		return nil, errors.Wrap(result.Error, fmt.Sprintf("select from %s error", bilbilVideoTableName))
+	}
+
+	return list, nil
+}

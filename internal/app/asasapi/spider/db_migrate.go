@@ -42,7 +42,7 @@ func (m *DBMigrate) run() {
 	}
 	defer failBvFile.Close()
 
-	oldDB, err := gorm.Open(sqlite.Open("ASOUL.db"))
+	oldDB, err := gorm.Open(sqlite.Open("./ASOUL.db"))
 
 	if err != nil {
 		m.logger.Fatal("open sqlite db error", zap.Error(err))
@@ -59,7 +59,9 @@ func (m *DBMigrate) run() {
 	}
 
 	tx := m.db.WithContext(context.TODO())
-	for p := 0; m.isRunning; p++ {
+	for p := 1; m.isRunning; p++ {
+		m.logger.Info("start new page ", zap.Int("page", p))
+
 		var list []oldInfo
 		result := oldDB.Raw("SELECT bvid, tags, title FROM ASOUL_ALL_API LIMIT ?, ?", (p-1)*size, size).Find(&list)
 		if result.Error != nil {
@@ -67,13 +69,33 @@ func (m *DBMigrate) run() {
 			return
 		}
 
+		bvidList := make([]string, 0, size)
+		bvMap := make(map[string]oldInfo, 0)
 		for _, info := range list {
+			bvMap[info.Bvid] = info
+			bvidList = append(bvidList, info.Bvid)
+		}
+
+		var inList []*struct {
+			Bvid string
+		}
+
+		oList := make([]oldInfo, 0, 100)
+		if tx.Table("bilbil_asoul_video").Where("bvid IN (?)", bvidList).Select("bvid").Find(&inList).Error == nil {
+			for _, e := range inList {
+				if oInfo, ok := bvMap[e.Bvid]; !ok {
+					oList = append(oList, oInfo)
+				}
+			}
+		}
+
+		for _, info := range oList {
 			var bInfo *bilbil.VideoInfoResponse
-			for retry := 0; retry < 3; retry++ {
+			for retry := 1; retry <= 3; retry++ {
+				time.Sleep(time.Duration(retry) * 400 * time.Millisecond)
 				if bInfo, err = m.sdk.VideoWebInfo(info.Bvid); err != nil {
 					break
 				}
-				time.Sleep(time.Duration(retry) * 800 * time.Millisecond)
 			}
 
 			if err != nil || bInfo == nil {
