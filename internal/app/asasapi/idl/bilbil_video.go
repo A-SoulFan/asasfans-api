@@ -7,9 +7,11 @@ import (
 )
 
 type BilbilVideoSearchReq struct {
-	Order BilbilVideoOrder `form:"order" binding:"required,oneof=pubdate view score"`
-	Page  int64            `form:"page,default=1" binding:"omitempty,gt=0"`
-	Q     string           `form:"q" binding:"omitempty"`
+	Order     BilbilVideoOrder `form:"order" binding:"required,oneof=pubdate view score"`
+	Page      int64            `form:"page,default=1" binding:"omitempty,gt=0"`
+	Q         string           `form:"q" binding:"omitempty"`
+	Copyright int              `form:"copyright" binding:"omitempty,oneof=1 2"`
+	Tname     string           `form:"tname" binding:"omitempty,oneof=animation music dance game live delicacy guichu"`
 }
 
 type BilbilVideoSearchResp struct {
