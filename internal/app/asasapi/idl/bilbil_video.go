@@ -54,6 +54,9 @@ const (
 
 type BilbilVideoRepository interface {
 	Create(e *BilbilVideo) error
-	Search(queryItems []query_parser.QueryItem, order BilbilVideoOrder, page, size int64) (list []*BilbilVideo, total int64, err error)
+
+	FindAllByBvidList(bvidList []string) (list []*BilbilVideo, err error)
 	FindAllByPubDate(from time.Time, to time.Time, page, size int64) (list []*BilbilVideo, total int64, err error)
+
+	Search(queryItems []query_parser.QueryItem, order BilbilVideoOrder, page, size int64) (list []*BilbilVideo, total int64, err error)
 }

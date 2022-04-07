@@ -2,8 +2,8 @@ package spider
 
 import (
 	"context"
-	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
@@ -76,7 +76,8 @@ func (u *Update) run(tk *time.Ticker) error {
 }
 
 func (u *Update) spider() error {
-	repo := repository.NewBilbilVideo(u.db.WithContext(context.TODO()))
+	tx := u.db.WithContext(context.TODO())
+	repo := repository.NewBilbilVideo(tx)
 
 	size := 100
 	for p := 1; true; p++ {
@@ -102,12 +103,13 @@ func (u *Update) spider() error {
 			// tag 错误的情况下 不更新
 			if err != nil {
 				u.logger.Error("get video web tag error", zap.String("bvid", video.Bvid), zap.Error(err))
-				tags = make([]string, 0)
+				tags = strings.Split(video.Tag, ",")
 			}
 			tags = tagInfos.ToTagStringSlice()
 
-			// TODO: insertDB
-			fmt.Println(tags)
+			if err := insertDB(tx, vInfo, strings.Join(tags, ",")); err != nil {
+				u.logger.Error("insertDB error", zap.String("bvid", video.Bvid))
+			}
 		}
 
 		if len(list) < size {

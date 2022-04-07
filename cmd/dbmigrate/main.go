@@ -15,16 +15,16 @@ func main() {
 	launcher.Run(func(viper *viper.Viper) fx.Option {
 		return fx.Options(
 			database.Provide(),
-			fx.Provide(spider.NewVideo),
+			fx.Provide(spider.NewDbMigrate),
 			fx.Provide(bilbil.NewSDK),
-			fx.Invoke(func(lifecycle fx.Lifecycle, spiderVideo *spider.Video) {
+			fx.Invoke(func(lifecycle fx.Lifecycle, dbmigrate *spider.DBMigrate) {
 				lifecycle.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
-						spiderVideo.Run()
+						dbmigrate.Run()
 						return nil
 					},
 					OnStop: func(ctx context.Context) error {
-						return spiderVideo.Stop()
+						return dbmigrate.Stop()
 					},
 				})
 			}),

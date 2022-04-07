@@ -55,7 +55,7 @@ func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, or
 	}
 
 	resp := builderQueryItems(impl.tx, queryItems, renameMap).Table(bilbilVideoTableName).
-		Joins(fmt.Sprintf("JOIN %s ON %s.bvid = %s.bvid", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
+		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.bvid = %s.bvid", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
 		Select(fmt.Sprintf("%s.*", bilbilVideoTableName)).
 		Order(fmt.Sprintf("%s DESC", order)).
 		Offset(int((page - 1) * size)).Limit(int(size)).
@@ -66,7 +66,7 @@ func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, or
 	}
 
 	resp = builderQueryItems(impl.tx, queryItems, renameMap).Table(bilbilVideoTableName).
-		Joins(fmt.Sprintf("JOIN %s ON %s.bvid = %s.bvid", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
+		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.bvid = %s.bvid", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
 		Select(fmt.Sprintf("%s.id", bilbilVideoTableName)).
 		Count(&total)
 
@@ -131,4 +131,13 @@ func (impl *BilbilVideoMysqlImpl) Create(e *idl.BilbilVideo) error {
 
 		return nil
 	})
+}
+
+func (impl *BilbilVideoMysqlImpl) FindAllByBvidList(bvidList []string) (list []*idl.BilbilVideo, err error) {
+	result := impl.tx.Table(bilbilVideoTableName).Where("bvid IN (?)", bvidList).Find(&list)
+	if result.Error != nil {
+		return nil, errors.Wrap(result.Error, fmt.Sprintf("select from %s error", bilbilVideoTableName))
+	}
+
+	return list, nil
 }
