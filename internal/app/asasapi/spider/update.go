@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -101,7 +100,6 @@ func (u *Update) run(tk *time.Ticker) error {
 
 func (u *Update) spider() error {
 	//get time three days ago
-
 	repo := repository.NewBilbilVideo(u.db)
 	data, err := repo.Read(time.Now().AddDate(0, 0, -3), time.Now())
 	if err != nil {
@@ -109,24 +107,31 @@ func (u *Update) spider() error {
 	}
 	bvList := getUpdateBVList(data)
 	for _, bv := range bvList {
-		data, err := u.sdk.VideoWebInfo(bv)
+		//获取普通视频信息
+		webInfos, err := u.sdk.VideoWebInfo(bv)
 		if err != nil {
 			u.logger.Error("get video web info error", zap.Error(err))
 			continue
 		}
-
-		// 处理 tag == title 的情况
-
-		if err := u.updateDB(info, &sInfo); err != nil {
-			u.logger.Error("insertDB error", zap.String("bvid", sInfo.Bvid))
-			_, _ = failBvFile.WriteString(sInfo.Bvid + "\n")
+		tagInfos, err := u.sdk.VideoWebTagInfo(strconv.Itoa(webInfos.Aid))
+		strTags := getStrTags(tagInfos)
+		//获取tag信息
+		if err := u.updateDB(webInfos, strTags); err != nil {
+			u.logger.Error("insertDB error", zap.String("bid", webInfos.Bvid), zap.Error(err))
 		}
-
 	}
-
+	return nil
 }
 
-func (u *Update) updateDB(info *bilbil.VideoInfoResponse, sInfo *bilbil.VideoSearchInfo) error {
+func getStrTags(infos []*bilbil.VideoTagInfo) string {
+	var result string
+	for _, info := range infos {
+		result += info.TagName + ","
+	}
+	return result
+}
+
+func (u *Update) updateDB(info *bilbil.VideoInfoResponse, strTags string) error {
 	e := &idl.BilbilVideo{
 		Bvid:      info.Bvid,
 		Aid:       uint64(info.Aid),
@@ -139,7 +144,7 @@ func (u *Update) updateDB(info *bilbil.VideoInfoResponse, sInfo *bilbil.VideoSea
 		Title:     info.Title,
 		Desc:      info.Desc,
 		Pic:       info.Pic,
-		Tag:       sInfo.Tag,
+		Tag:       strTags,
 		Pubdate:   uint64(info.Pubdate),
 		Duration:  strconv.Itoa(info.Duration),
 		View:      uint64(info.Stat.View),

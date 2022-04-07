@@ -10,8 +10,9 @@ import (
 )
 
 const (
-	webVideoSearchURL = "https://api.bilibili.com/x/web-interface/search/type?context=&search_type=video&page=%d&order=pubdate&keyword=%s&duration=0&category_id=&tids_2=&__refresh__=true&_extra=&tids=0&highlight=1&single_column=0"
-	webVideoInfoURL   = "https://api.bilibili.com/x/web-interface/view?bvid=%s"
+	webVideoSearchURL  = "https://api.bilibili.com/x/web-interface/search/type?context=&search_type=video&page=%d&order=pubdate&keyword=%s&duration=0&category_id=&tids_2=&__refresh__=true&_extra=&tids=0&highlight=1&single_column=0"
+	webVideoInfoURL    = "https://api.bilibili.com/x/web-interface/view?bvid=%s"
+	webVideoTagInfoURL = "https://api.bilibili.com/x/web-interface/view/detail/tag?aid=%s"
 )
 
 type SDK struct {
@@ -186,6 +187,39 @@ type VideoInfoResponse struct {
 	} `json:"honor_reply"`
 }
 
+type VideoTagInfo struct {
+	TagId        int    `json:"tag_id"`
+	TagName      string `json:"tag_name"`
+	Cover        string `json:"cover"`
+	HeadCover    string `json:"head_cover"`
+	Content      string `json:"content"`
+	ShortContent string `json:"short_content"`
+	Type         int    `json:"type"`
+	State        int    `json:"state"`
+	Ctime        int    `json:"ctime"`
+	Count        struct {
+		View  int `json:"view"`
+		Use   int `json:"use"`
+		Atten int `json:"atten"`
+	} `json:"count"`
+	IsAtten         int    `json:"is_atten"`
+	Likes           int    `json:"likes"`
+	Hates           int    `json:"hates"`
+	Attribute       int    `json:"attribute"`
+	Liked           int    `json:"liked"`
+	Hated           int    `json:"hated"`
+	ExtraAttr       int    `json:"extra_attr"`
+	TagType         string `json:"tag_type"`
+	IsActivity      bool   `json:"is_activity"`
+	Color           string `json:"color"`
+	Alpha           int    `json:"alpha"`
+	IsSeason        bool   `json:"is_season"`
+	SubscribedCount int    `json:"subscribed_count"`
+	ArchiveCount    string `json:"archive_count"`
+	FeaturedCount   int    `json:"featured_count"`
+	JumpUrl         string `json:"jump_url"`
+}
+
 func (sdk *SDK) fastGet(url string, data interface{}) error {
 	result := &ResponseBasic{Data: &data}
 
@@ -211,7 +245,6 @@ func (sdk *SDK) VideoWebSearch(keyword string, page int) (data *SearchResponse, 
 	if err = sdk.fastGet(fmt.Sprintf(webVideoSearchURL, page, keyword), &data); err != nil {
 		return nil, err
 	}
-
 	return data, nil
 }
 
@@ -228,5 +261,12 @@ func (sdk *SDK) VideoWebInfo(bvid string) (data *VideoInfoResponse, err error) {
 		return nil, err
 	}
 
+	return data, nil
+}
+
+func (sdk SDK) VideoWebTagInfo(aid string) (data []*VideoTagInfo, err error) {
+	if err = sdk.fastGet(fmt.Sprintf(webVideoTagInfoURL, aid), &data); err != nil {
+		return nil, err
+	}
 	return data, nil
 }
