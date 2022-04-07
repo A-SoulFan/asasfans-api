@@ -55,7 +55,7 @@ func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, or
 	}
 
 	resp := builderQueryItems(impl.tx, queryItems, renameMap).Table(bilbilVideoTableName).
-		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.bvid = %s.bvid", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
+		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.v_id = %s.id", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
 		Select(fmt.Sprintf("%s.*", bilbilVideoTableName)).
 		Order(fmt.Sprintf("%s DESC", order)).
 		Offset(int((page - 1) * size)).Limit(int(size)).
@@ -66,7 +66,7 @@ func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, or
 	}
 
 	resp = builderQueryItems(impl.tx, queryItems, renameMap).Table(bilbilVideoTableName).
-		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.bvid = %s.bvid", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
+		Joins(fmt.Sprintf("LEFT JOIN %s ON %s.v_id = %s.id", bilbilVideoTagTableName, bilbilVideoTagTableName, bilbilVideoTableName)).
 		Select(fmt.Sprintf("%s.id", bilbilVideoTableName)).
 		Count(&total)
 
@@ -116,12 +116,12 @@ func (impl *BilbilVideoMysqlImpl) Create(e *idl.BilbilVideo) error {
 		tags := strings.Split(e.Tag, ",")
 		for _, tag := range tags {
 			result = _tx.Table(bilbilVideoTagTableName).Clauses(clause.OnConflict{
-				Columns:   []clause.Column{{Name: "bvid"}},
+				Columns:   []clause.Column{{Name: "v_id"}},
 				DoNothing: true,
 			}).Create(struct {
-				Bvid string
-				Tag  string
-			}{Bvid: e.Bvid,
+				Vid uint64 `gorm:"column:v_id"`
+				Tag string
+			}{Vid: e.Id,
 				Tag: tag})
 
 			if result.Error != nil {

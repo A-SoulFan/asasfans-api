@@ -134,6 +134,7 @@ func tagStrToSlice(tagStr, title string) []string {
 			continue
 		}
 
+		tag = strings.Replace(tag, "'", "", -1)
 		tags = append(tags, tag)
 	}
 
