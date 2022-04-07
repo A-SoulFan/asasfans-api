@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
@@ -23,6 +24,29 @@ func NewBilbilVideo(tx *gorm.DB) idl.BilbilVideoRepository {
 
 type BilbilVideoMysqlImpl struct {
 	tx *gorm.DB
+}
+
+func (impl *BilbilVideoMysqlImpl) FindAllByPubDate(from, to time.Time, page, size int64) (list []*idl.BilbilVideo, total int64, err error) {
+	result := impl.tx.Table(bilbilVideoTableName).
+		Where("pubdate >= ? AND pubdate <= ?", from.Unix(), to.Unix()).
+		Offset(int((page - 1) * size)).Limit(int(size)).
+		Order("pubdate DESC").
+		Find(&list)
+
+	if result == nil {
+		return nil, 0, errors.Wrap(result.Error, fmt.Sprintf("select from %s error", bilbilVideoTableName))
+	}
+
+	result = impl.tx.Table(bilbilVideoTableName).
+		Select("id").
+		Where("pubdate >= ? AND pubdate <= ?", from.Second(), to).
+		Count(&total)
+
+	if result == nil {
+		return nil, 0, errors.Wrap(result.Error, fmt.Sprintf("count from %s error", bilbilVideoTableName))
+	}
+
+	return list, total, nil
 }
 
 func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, order idl.BilbilVideoOrder, page, size int64) (list []*idl.BilbilVideo, total int64, err error) {
@@ -97,10 +121,8 @@ func (impl *BilbilVideoMysqlImpl) Create(e *idl.BilbilVideo) error {
 			}).Create(struct {
 				Bvid string
 				Tag  string
-			}{
-				Bvid: e.Bvid,
-				Tag:  tag,
-			})
+			}{Bvid: e.Bvid,
+				Tag: tag})
 
 			if result.Error != nil {
 				return errors.Wrap(result.Error, fmt.Sprintf("insert %s fail", bilbilVideoTagTableName))
