@@ -133,6 +133,8 @@ func (v *Video) spider() error {
 					v.logger.Error("insertDB error", zap.String("bvid", sInfo.Bvid))
 					_, _ = failBvFile.WriteString(sInfo.Bvid + "\n")
 				}
+
+				v.logger.Info("insert success", zap.String("bvid", info.Bvid), zap.String("title", info.Title), zap.String("tag", sInfo.Tag))
 			}
 
 			if p >= totalPage {
@@ -188,16 +190,12 @@ func calculateScore(info *bilbil.VideoInfoResponse) uint64 {
 // isSkip 判断是否需要跳过此条
 func isSkip(sInfo bilbil.VideoSearchInfo, keyword string) bool {
 	tags := strings.Split(sInfo.Tag, ",")
-	// 如果 用户昵称存在 keyword 则进一步检查 tag 是否具有 keyword
 	// 防止错误的收录不属于 keyword 的内容
-	if strings.Index(sInfo.Author, keyword) != -1 {
-		for _, tag := range tags {
-			if tag == keyword {
-				return false
-			}
+	for _, tag := range tags {
+		if tag == keyword {
+			return false
 		}
-		return true
 	}
 
-	return false
+	return true
 }
