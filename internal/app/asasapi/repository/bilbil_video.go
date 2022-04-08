@@ -86,7 +86,8 @@ func builderQueryItems(tx *gorm.DB, queryItems []query_parser.QueryItem) *gorm.D
 		case query_parser.TypeOR:
 			tx = tx.Where(fmt.Sprintf("%s IN (?)", item.Key), item.Values)
 		case query_parser.TypeBetween:
-			tx = tx.Where(fmt.Sprintf("%s BETWEEN ? AND ?", item.Key), item.GetBetweenValues())
+			v := item.GetBetweenValues()
+			tx = tx.Where(fmt.Sprintf("%s BETWEEN ? AND ?", item.Key), v[0], v[1])
 		}
 	}
 
