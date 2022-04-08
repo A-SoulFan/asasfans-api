@@ -29,8 +29,9 @@ func NewDbMigrate(db *gorm.DB, sdk *bilbil.SDK, logger *zap.Logger) *DBMigrate {
 	}
 }
 
-func (m *DBMigrate) Run() {
+func (m *DBMigrate) Run(ctx context.Context) error {
 	go m.run()
+	return nil
 }
 
 func (m *DBMigrate) run() {
@@ -96,6 +97,10 @@ func (m *DBMigrate) run() {
 		}
 
 		for _, info := range oList {
+			if !m.isRunning {
+				break
+			}
+
 			var bInfo *bilbil.VideoInfoResponse
 			time.Sleep(400 * time.Millisecond)
 			if bInfo, err = m.sdk.VideoWebInfo(info.Bvid); err != nil || bInfo == nil {
@@ -119,6 +124,8 @@ func (m *DBMigrate) run() {
 			break
 		}
 	}
+
+	m.logger.Info("db migrate success")
 }
 
 func tagStrToSlice(tagStr, title string) []string {
@@ -141,7 +148,7 @@ func tagStrToSlice(tagStr, title string) []string {
 	return tags
 }
 
-func (m *DBMigrate) Stop() error {
+func (m *DBMigrate) Stop(ctx context.Context) error {
 	m.isRunning = false
 	return nil
 }

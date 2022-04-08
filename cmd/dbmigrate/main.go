@@ -20,11 +20,10 @@ func main() {
 			fx.Invoke(func(lifecycle fx.Lifecycle, dbmigrate *spider.DBMigrate) {
 				lifecycle.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
-						dbmigrate.Run()
-						return nil
+						return dbmigrate.Run(ctx)
 					},
 					OnStop: func(ctx context.Context) error {
-						return dbmigrate.Stop()
+						return dbmigrate.Stop(ctx)
 					},
 				})
 			}),

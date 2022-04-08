@@ -4,10 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"os/signal"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
@@ -26,10 +24,11 @@ const (
 )
 
 type Video struct {
-	stopChan chan bool
-	db       *gorm.DB
-	logger   *zap.Logger
-	sdk      *bilbil.SDK
+	stopChan  chan bool
+	db        *gorm.DB
+	logger    *zap.Logger
+	sdk       *bilbil.SDK
+	isRunning bool
 }
 
 func NewVideo(db *gorm.DB, logger *zap.Logger, sdk *bilbil.SDK) *Video {
@@ -41,65 +40,53 @@ func NewVideo(db *gorm.DB, logger *zap.Logger, sdk *bilbil.SDK) *Video {
 	}
 }
 
-func (v *Video) Stop() error {
+func (v *Video) Stop(ctx context.Context) error {
 	v.logger.Info("stopping spider server")
-	// 平滑关闭,等待5秒钟处理
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
 
-	if err := v.stop(ctx); err != nil {
-		return errors.Wrap(err, "shutdown spider server error")
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.New("shutdown spider server timeout")
+		default:
+			if err := v.stop(); err != nil {
+				return errors.Wrap(err, "shutdown spider server error")
+			}
+		}
 	}
+}
 
+func (v *Video) stop() error {
+	v.stopChan <- true
+	v.isRunning = false
 	return nil
 }
 
-func (v *Video) stop(ctx context.Context) error {
-	close(v.stopChan)
-	return nil
-}
+func (v *Video) Run(ctx context.Context) error {
+	tk := time.NewTimer(time.Hour)
+	v.isRunning = true
 
-func (v *Video) Run() {
 	go func() {
-		err := v.run((*time.Ticker)(time.NewTimer(time.Hour)))
-		if err != nil {
+		if err := v.spider(); err != nil {
 			v.logger.Fatal("start spider server error", zap.Error(err))
 		}
 	}()
 
-	go v.awaitSignal()
-}
-
-func (v *Video) awaitSignal() {
-	c := make(chan os.Signal, 1)
-	signal.Reset(syscall.SIGTERM, syscall.SIGINT)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
-	select {
-	case s := <-c:
-		v.logger.Info("receive server signal", zap.String("signal", s.String()))
-		if err := v.Stop(); err != nil {
-			v.logger.Warn("stop spider server error", zap.Error(err))
-		}
-		os.Exit(0)
-	}
-}
-
-func (v *Video) run(tk *time.Ticker) error {
-	if err := v.spider(); err != nil {
-		return err
-	}
-
-	for {
-		select {
-		case <-tk.C:
-			if err := v.spider(); err != nil {
-				return err
+	go func(_tk *time.Timer) {
+		for {
+			select {
+			case <-tk.C:
+				if err := v.spider(); err != nil {
+					v.logger.Fatal("start spider server error", zap.Error(err))
+				}
+			case <-v.stopChan:
+				return
 			}
-		case <-v.stopChan:
-			return nil
 		}
-	}
+	}(tk)
+
+	return nil
 }
+
 func (v *Video) spider() error {
 	// 爬取失败的 bvid 存储在文件
 	failBvFile, err := os.OpenFile(failByListFilename, os.O_RDWR|os.O_CREATE, 0766)
@@ -118,10 +105,15 @@ func (v *Video) spider() error {
 			}
 
 			for _, sInfo := range list {
+				if !v.isRunning {
+					return nil
+				}
+
 				if isSkip(sInfo, keyword) {
 					continue
 				}
 
+				time.Sleep(400 * time.Millisecond)
 				info, err := v.sdk.VideoWebInfo(sInfo.Bvid)
 				if err != nil {
 					v.logger.Error("VideoWebInfo error", zap.String("bvid", sInfo.Bvid))
@@ -141,15 +133,11 @@ func (v *Video) spider() error {
 					v.logger.Error("insertDB error", zap.String("bvid", sInfo.Bvid))
 					_, _ = failBvFile.WriteString(sInfo.Bvid + "\n")
 				}
-
-				time.Sleep(500 * time.Millisecond)
 			}
 
 			if p >= totalPage {
 				break
 			}
-
-			time.Sleep(500 * time.Millisecond)
 		}
 	}
 
