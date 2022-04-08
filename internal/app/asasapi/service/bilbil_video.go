@@ -9,14 +9,13 @@ import (
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
-
 	"gorm.io/gorm"
 )
 
 const (
 	defaultQuerySize = 20
 
-	allowKeyItems = "tag,name,mid"
+	allowKeyItems = "tag,name,mid,view,pubdate"
 )
 
 type BilbilVideo struct {
