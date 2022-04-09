@@ -51,6 +51,7 @@ func (v *Video) Stop(ctx context.Context) error {
 			if err := v.stop(); err != nil {
 				return errors.Wrap(err, "shutdown spider server error")
 			}
+			return nil
 		}
 	}
 }
@@ -62,7 +63,7 @@ func (v *Video) stop() error {
 }
 
 func (v *Video) Run(ctx context.Context) error {
-	tk := time.NewTimer(time.Hour)
+	tk := time.NewTicker(30 * time.Minute)
 	v.isRunning = true
 
 	go func() {
@@ -71,10 +72,11 @@ func (v *Video) Run(ctx context.Context) error {
 		}
 	}()
 
-	go func(_tk *time.Timer) {
+	go func(_tk *time.Ticker) {
 		for {
 			select {
-			case <-tk.C:
+			case <-_tk.C:
+				v.logger.Info("[tick] video spider", zap.Time("time", time.Now()))
 				if err := v.spider(); err != nil {
 					v.logger.Fatal("start spider server error", zap.Error(err))
 				}

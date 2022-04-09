@@ -17,13 +17,16 @@ func main() {
 			database.Provide(),
 			fx.Provide(spider.NewVideo),
 			fx.Provide(bilbil.NewSDK),
-			fx.Invoke(func(lifecycle fx.Lifecycle, spiderVideo *spider.Video) {
+			fx.Invoke(func(lifecycle fx.Lifecycle, spiderVideo *spider.Video, shutdown fx.Shutdowner) {
 				lifecycle.Append(fx.Hook{
 					OnStart: func(ctx context.Context) error {
 						return spiderVideo.Run(ctx)
 					},
 					OnStop: func(ctx context.Context) error {
-						return spiderVideo.Stop(ctx)
+						if err := spiderVideo.Stop(ctx); err != nil {
+							return err
+						}
+						return shutdown.Shutdown()
 					},
 				})
 			}),
