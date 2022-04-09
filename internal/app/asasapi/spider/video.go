@@ -120,15 +120,6 @@ func (v *Video) spider() error {
 					continue
 				}
 
-				// 处理 tag == title 的情况
-				tags := make([]string, 0, 5)
-				for _, tag := range strings.Split(sInfo.Tag, ",") {
-					if tag != sInfo.Title {
-						tags = append(tags, tag)
-					}
-				}
-				sInfo.Tag = strings.Join(tags, ",")
-
 				if err := insertDB(v.db.WithContext(context.TODO()), info, sInfo.Tag); err != nil {
 					v.logger.Error("insertDB error", zap.String("bvid", sInfo.Bvid))
 					_, _ = failBvFile.WriteString(sInfo.Bvid + "\n")
@@ -172,7 +163,7 @@ func insertDB(tx *gorm.DB, info *bilbil.VideoInfoResponse, strTag string) error 
 		Score:     calculateScore(info),
 	}
 
-	if err := repository.NewBilbilVideo(tx).Create(e); err != nil {
+	if err := repository.NewBilbilVideo(tx).Save(e); err != nil {
 		return err
 	}
 
