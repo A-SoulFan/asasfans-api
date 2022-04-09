@@ -29,50 +29,43 @@ func NewUpdate(db *gorm.DB, logger *zap.Logger, sdk *bilbil.SDK) *Update {
 	}
 }
 
-func (u *Update) Stop() error {
+func (u *Update) Stop(ctx context.Context) error {
 	u.logger.Info("stopping spider server")
-	// 平滑关闭,等待5秒钟处理
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
-	defer cancel()
-
-	if err := u.stop(ctx); err != nil {
-		return errors.Wrap(err, "shutdown spider server error")
-	}
-
-	return nil
-}
-
-func (u *Update) stop(ctx context.Context) error {
-	close(u.stopChan)
-	return nil
-}
-
-func (u *Update) Run() error {
-	go func() {
-		err := u.run((*time.Ticker)(time.NewTimer(time.Hour)))
-		if err != nil {
-			u.logger.Fatal("start spider server error", zap.Error(err))
-		}
-	}()
-
-	return nil
-}
-
-func (u *Update) run(tk *time.Ticker) error {
-	if err := u.spider(); err != nil {
-		return err
-	}
 
 	for {
 		select {
-		case <-tk.C:
-			if err := u.spider(); err != nil {
-				return err
-			}
-		case <-u.stopChan:
+		case <-ctx.Done():
+			return errors.New("shutdown video update spider server timeout")
+		default:
+			close(u.stopChan)
 			return nil
 		}
 	}
+}
+
+func (u *Update) Run(ctx context.Context) error {
+	go func() {
+		if err := u.spider(); err != nil {
+			u.logger.Fatal("start video update error", zap.Error(err))
+		}
+	}()
+
+	tk := time.NewTicker(60 * time.Minute)
+	go func(_tk *time.Ticker) {
+		for {
+			select {
+			case <-_tk.C:
+				u.logger.Info("[tick] video update spider", zap.Time("time", time.Now()))
+				if err := u.spider(); err != nil {
+					u.logger.Fatal("start video update error", zap.Error(err))
+				}
+			case <-u.stopChan:
+				return
+			}
+		}
+	}(tk)
+
+	return nil
 }
 
 func (u *Update) spider() error {
@@ -100,7 +93,7 @@ func (u *Update) spider() error {
 			var tags []string
 			// 获取视频 tag
 			tagInfos, err := u.sdk.VideoWebTagInfo(strconv.Itoa(vInfo.Aid))
-			// tag 错误的情况下 不更新
+			// tag 错误的情况下 不更新 tag
 			if err != nil {
 				u.logger.Error("get video web tag error", zap.String("bvid", video.Bvid), zap.Error(err))
 				tags = strings.Split(video.Tag, ",")
