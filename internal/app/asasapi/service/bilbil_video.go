@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/util/query_parser"
+	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
 )
 
@@ -80,7 +82,28 @@ func (b *BilbilVideo) Search(ctx context.Context, req idl.BilbilVideoSearchReq) 
 	}, nil
 }
 
+var (
+	_stringCheck = func(item query_parser.QueryItem) (bool, string) {
+		if err := validator.New().Var(item.Values, "omitempty,dive,max=32"); err != nil {
+			return false, fmt.Sprintf("%s verification failed.", item.Key)
+		}
+		return true, "ok"
+	}
+
+	_numericCheck = func(item query_parser.QueryItem) (bool, string) {
+		if err := validator.New().Var(item.Values, "omitempty,dive,max=64,numeric"); err != nil {
+			return false, fmt.Sprintf("%s verification failed.", item.Key)
+		}
+		return true, "ok"
+	}
+)
+
 func queryCheck() map[string]func(item query_parser.QueryItem) (bool, string) {
-	// TODO: check query params
-	return map[string]func(item query_parser.QueryItem) (bool, string){}
+	return map[string]func(item query_parser.QueryItem) (bool, string){
+		"tag":     _stringCheck,
+		"name":    _stringCheck,
+		"mid":     _numericCheck,
+		"view":    _numericCheck,
+		"pubdate": _numericCheck,
+	}
 }

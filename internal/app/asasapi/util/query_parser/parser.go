@@ -43,14 +43,21 @@ func ParseString(s string, allowKeyItem ...string) []QueryItem {
 			continue
 		}
 
-		qItem := QueryItem{
-			Key:    keyStrings[0],
-			Values: strings.Split(keyStrings[1], "+"),
+		values := make([]string, 0, 4)
+		for _, v := range strings.Split(keyStrings[1], "+") {
+			if len(v) > 0 {
+				values = append(values, v)
+			}
 		}
 
 		// 无效的
-		if len(qItem.Values) < 1 {
+		if len(values) < 1 {
 			continue
+		}
+
+		qItem := QueryItem{
+			Key:    keyStrings[0],
+			Values: values,
 		}
 
 		if t := strings.ToUpper(keyStrings[len(keyStrings)-1]); t == TypeOR || t == TypeAND {
