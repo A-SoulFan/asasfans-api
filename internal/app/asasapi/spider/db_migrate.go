@@ -128,26 +128,6 @@ func (m *DBMigrate) run() {
 	m.logger.Info("db migrate success")
 }
 
-func tagStrToSlice(tagStr, title string) []string {
-	//if strings.HasPrefix(tagStr, "['") {
-	tagStr = strings.Replace(tagStr, "['", "", -1)
-	tagStr = strings.Replace(tagStr, "']", "", -1)
-	tagStr = strings.Replace(tagStr, title, "", -1)
-	//}
-
-	tags := make([]string, 0, 5)
-	for _, tag := range strings.Split(tagStr, ",") {
-		if l := len(tag); l < 1 || l > 30 {
-			continue
-		}
-
-		tag = strings.Replace(tag, "'", "", -1)
-		tags = append(tags, tag)
-	}
-
-	return tags
-}
-
 func (m *DBMigrate) Stop(ctx context.Context) error {
 	m.isRunning = false
 	return nil

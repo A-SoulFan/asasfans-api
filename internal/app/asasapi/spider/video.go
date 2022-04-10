@@ -171,24 +171,3 @@ func insertDB(tx *gorm.DB, info *bilbil.VideoInfoResponse, strTag string) error 
 
 	return nil
 }
-
-func calculateScore(info *bilbil.VideoInfoResponse) uint64 {
-	score := float64(info.Stat.View)*0.25 +
-		float64(info.Stat.Like+info.Stat.Coin+info.Stat.Reply+info.Stat.Like)*0.4 +
-		float64(info.Stat.Favorite)*0.3 +
-		float64(info.Stat.Share)*0.6
-	return uint64(score)
-}
-
-// isSkip 判断是否需要跳过此条
-func isSkip(sInfo bilbil.VideoSearchInfo, keyword string) bool {
-	tags := strings.Split(sInfo.Tag, ",")
-	// 防止错误的收录不属于 keyword 的内容
-	for _, tag := range tags {
-		if tag == keyword {
-			return false
-		}
-	}
-
-	return true
-}
