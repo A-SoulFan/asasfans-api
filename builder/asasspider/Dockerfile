@@ -23,7 +23,7 @@ RUN apk update --no-cache && apk add --no-cache ca-certificates tzdata
 
 ENV TZ Asia/Shanghai
 
-COPY --from=builder /work/asasapi_server ./
+COPY --from=builder /work/asas_spider ./
 
 
 CMD ["./asas_spider", "-f", "config/asasapi.yml"]
