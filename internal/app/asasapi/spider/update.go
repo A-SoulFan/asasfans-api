@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
-	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilbil"
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -17,10 +17,10 @@ type Update struct {
 	stopChan chan bool
 	db       *gorm.DB
 	logger   *zap.Logger
-	sdk      *bilbil.SDK
+	sdk      *bilibili.SDK
 }
 
-func NewUpdate(db *gorm.DB, logger *zap.Logger, sdk *bilbil.SDK) *Update {
+func NewUpdate(db *gorm.DB, logger *zap.Logger, sdk *bilibili.SDK) *Update {
 	return &Update{
 		stopChan: make(chan bool),
 		db:       db,

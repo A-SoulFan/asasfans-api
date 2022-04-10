@@ -3,10 +3,10 @@ package spider
 import (
 	"strings"
 
-	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilbil"
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 )
 
-func calculateScore(info *bilbil.VideoInfoResponse) uint64 {
+func calculateScore(info *bilibili.VideoInfoResponse) uint64 {
 	score := float64(info.Stat.View)*0.25 +
 		float64(info.Stat.Like+info.Stat.Coin+info.Stat.Reply+info.Stat.Like)*0.4 +
 		float64(info.Stat.Favorite)*0.3 +
@@ -15,7 +15,7 @@ func calculateScore(info *bilbil.VideoInfoResponse) uint64 {
 }
 
 // isSkip 判断是否需要跳过此条
-func isSkip(sInfo bilbil.VideoSearchInfo, keyword string) bool {
+func isSkip(sInfo bilibili.VideoSearchInfo, keyword string) bool {
 	tags := strings.Split(sInfo.Tag, ",")
 	// 防止错误的收录不属于 keyword 的内容
 	for _, tag := range tags {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
-	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilbil"
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -27,11 +27,11 @@ type Video struct {
 	stopChan  chan bool
 	db        *gorm.DB
 	logger    *zap.Logger
-	sdk       *bilbil.SDK
+	sdk       *bilibili.SDK
 	isRunning bool
 }
 
-func NewVideo(db *gorm.DB, logger *zap.Logger, sdk *bilbil.SDK) *Video {
+func NewVideo(db *gorm.DB, logger *zap.Logger, sdk *bilibili.SDK) *Video {
 	return &Video{
 		stopChan: make(chan bool),
 		db:       db,
@@ -139,7 +139,7 @@ func (v *Video) spider() error {
 	return nil
 }
 
-func insertDB(tx *gorm.DB, info *bilbil.VideoInfoResponse, strTag string) error {
+func insertDB(tx *gorm.DB, info *bilibili.VideoInfoResponse, strTag string) error {
 	e := &idl.BilbilVideo{
 		Bvid:      info.Bvid,
 		Aid:       uint64(info.Aid),

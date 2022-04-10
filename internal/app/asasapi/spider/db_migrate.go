@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilbil"
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -15,12 +15,12 @@ import (
 
 type DBMigrate struct {
 	db        *gorm.DB
-	sdk       *bilbil.SDK
+	sdk       *bilibili.SDK
 	logger    *zap.Logger
 	isRunning bool
 }
 
-func NewDbMigrate(db *gorm.DB, sdk *bilbil.SDK, logger *zap.Logger) *DBMigrate {
+func NewDbMigrate(db *gorm.DB, sdk *bilibili.SDK, logger *zap.Logger) *DBMigrate {
 	return &DBMigrate{
 		db:        db,
 		sdk:       sdk,
@@ -101,7 +101,7 @@ func (m *DBMigrate) run() {
 				break
 			}
 
-			var bInfo *bilbil.VideoInfoResponse
+			var bInfo *bilibili.VideoInfoResponse
 			time.Sleep(400 * time.Millisecond)
 			if bInfo, err = m.sdk.VideoWebInfo(info.Bvid); err != nil || bInfo == nil {
 				_, _ = failBvFile.WriteString(fmt.Sprintf("%s,%s\n", info.Bvid, err.Error()))
