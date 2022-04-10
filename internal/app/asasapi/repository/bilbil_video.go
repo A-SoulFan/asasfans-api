@@ -16,6 +16,8 @@ import (
 const (
 	bilbilVideoTableName    = "bilbil_asoul_video"
 	bilbilVideoTagTableName = "bilbil_video_tag"
+
+	preAliasString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 )
 
 func NewBilbilVideo(tx *gorm.DB) idl.BilbilVideoRepository {
@@ -74,7 +76,26 @@ func (impl *BilbilVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, or
 func builderQueryItems(tx *gorm.DB, queryItems []query_parser.QueryItem) *gorm.DB {
 	for _, item := range queryItems {
 		if strings.ToLower(item.Key) == "tag" {
-			tx = tx.Where(fmt.Sprintf("%s.id IN (SELECT v_id FROM %s WHERE tag IN (?)) ", bilbilVideoTableName, bilbilVideoTagTableName), item.Values)
+			switch item.Type {
+			case query_parser.TypeAND:
+				preSQL := ""
+				values := make([]interface{}, 0, 5)
+				for i := 0; i < len(item.Values) && i < 5; i++ {
+					alias := string(preAliasString[i])
+					tmpStr := fmt.Sprintf("(SELECT tag, v_id FROM %s WHERE tag = ?)", bilbilVideoTagTableName)
+					values = append(values, item.Values[i])
+					if i == 0 {
+						preSQL += fmt.Sprintf("FROM %s AS %s", tmpStr, alias)
+					} else {
+						preSQL += fmt.Sprintf(" JOIN %s AS %s ON %s.v_id = %s.v_id", tmpStr, alias, alias, string(preAliasString[i-1]))
+					}
+				}
+
+				tx = tx.Where(fmt.Sprintf("%s.id IN (SELECT %s.v_id %s)", string(preAliasString[0]), bilbilVideoTableName, preSQL), values...)
+			case query_parser.TypeOR:
+				tx = tx.Where(fmt.Sprintf("%s.id IN (SELECT v_id FROM %s WHERE tag IN (?)) ", bilbilVideoTableName, bilbilVideoTagTableName), item.Values)
+			}
+
 			continue
 		}
 
