@@ -91,7 +91,7 @@ func builderQueryItems(tx *gorm.DB, queryItems []query_parser.QueryItem) *gorm.D
 					}
 				}
 
-				tx = tx.Where(fmt.Sprintf("%s.id IN (SELECT %s.v_id %s)", string(preAliasString[0]), bilbilVideoTableName, preSQL), values...)
+				tx = tx.Where(fmt.Sprintf("%s.id IN (SELECT %s.v_id %s)", bilbilVideoTableName, string(preAliasString[0]), preSQL), values...)
 			case query_parser.TypeOR:
 				tx = tx.Where(fmt.Sprintf("%s.id IN (SELECT v_id FROM %s WHERE tag IN (?)) ", bilbilVideoTableName, bilbilVideoTagTableName), item.Values)
 			}
