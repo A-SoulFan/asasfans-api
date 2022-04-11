@@ -68,7 +68,7 @@ func (v *Video) Run(ctx context.Context) error {
 
 	go func() {
 		if err := v.spider(); err != nil {
-			v.logger.Fatal("start spider server error", zap.Error(err))
+			v.logger.Error("start spider server error", zap.Error(err))
 		}
 	}()
 
@@ -78,7 +78,7 @@ func (v *Video) Run(ctx context.Context) error {
 			case <-_tk.C:
 				v.logger.Info("[tick] video spider", zap.Time("time", time.Now()))
 				if err := v.spider(); err != nil {
-					v.logger.Fatal("start spider server error", zap.Error(err))
+					v.logger.Error("start spider server error", zap.Error(err))
 				}
 			case <-v.stopChan:
 				return
@@ -102,7 +102,7 @@ func (v *Video) spider() error {
 		for p := 1; p <= pageDepth; p++ {
 			list, totalPage, err := v.sdk.VideoWebSearchToInfoList(keyword, p)
 			if err != nil {
-				v.logger.Error("VideoWebSearchToInfoList error", zap.String("keyword", keyword), zap.Int("page", p))
+				v.logger.Error("VideoWebSearchToInfoList error", zap.String("keyword", keyword), zap.Int("page", p), zap.Error(err))
 				continue
 			}
 
@@ -118,12 +118,16 @@ func (v *Video) spider() error {
 				time.Sleep(400 * time.Millisecond)
 				info, err := v.sdk.VideoWebInfo(sInfo.Bvid)
 				if err != nil {
-					v.logger.Error("VideoWebInfo error", zap.String("bvid", sInfo.Bvid))
+					if bErr, ok := err.(*bilibili.Error); ok {
+						v.logger.Warn("VideoWebInfo error", zap.String("bvid", sInfo.Bvid), zap.Int("code", bErr.Code), zap.String("message", bErr.Message))
+					} else {
+						v.logger.Error("VideoWebInfo error", zap.String("bvid", sInfo.Bvid), zap.Error(err))
+					}
 					continue
 				}
 
 				if err := insertDB(v.db.WithContext(context.TODO()), info, sInfo.Tag); err != nil {
-					v.logger.Error("insertDB error", zap.String("bvid", sInfo.Bvid))
+					v.logger.Error("insertDB error", zap.String("bvid", sInfo.Bvid), zap.Error(err))
 					_, _ = failBvFile.WriteString(sInfo.Bvid + "\n")
 				}
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/A-SoulFan/asasfans-api/internal/pkg/httpclient"
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -234,21 +235,20 @@ func (sdk *SDK) fastGet(url string, data interface{}) error {
 	result := &ResponseBasic{Data: &data}
 
 	client := resty.New()
-	if resp, err := client.R().SetResult(result).Get(url); err != nil {
-		return err
-	} else {
-		if resp.StatusCode() != http.StatusOK {
-			sdk.logger.Error("request bilibili error", zap.Int("http_code", resp.StatusCode()), zap.String("request_url", url))
-			return errors.New("request bilibili fail")
-		}
-
-		if result.Code != 0 {
-			sdk.logger.Error("get bilbil error", zap.Int("result_code", result.Code), zap.String("result_msg", result.Message), zap.String("request_url", url))
-			return errors.New(result.Message)
-		}
-
-		return nil
+	resp, err := client.R().SetResult(result).Get(url)
+	if err != nil {
+		return errors.Wrap(err, "http request failed")
 	}
+
+	if resp.StatusCode() != http.StatusOK {
+		return httpclient.NewError(resp.StatusCode(), resp.Body(), resp.Request)
+	}
+
+	if result.Code != 0 {
+		return NewError(result.Code, result.Message, resp.Request)
+	}
+
+	return nil
 }
 
 func (sdk *SDK) VideoWebSearch(keyword string, page int) (data *SearchResponse, err error) {

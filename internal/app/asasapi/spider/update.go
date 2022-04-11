@@ -46,7 +46,7 @@ func (u *Update) Stop(ctx context.Context) error {
 func (u *Update) Run(ctx context.Context) error {
 	go func() {
 		if err := u.spider(); err != nil {
-			u.logger.Fatal("start video update error", zap.Error(err))
+			u.logger.Error("start video update error", zap.Error(err))
 		}
 	}()
 
@@ -57,7 +57,7 @@ func (u *Update) Run(ctx context.Context) error {
 			case <-_tk.C:
 				u.logger.Info("[tick] video update spider", zap.Time("time", time.Now()))
 				if err := u.spider(); err != nil {
-					u.logger.Fatal("start video update error", zap.Error(err))
+					u.logger.Error("start video update error", zap.Error(err))
 				}
 			case <-u.stopChan:
 				return
@@ -85,7 +85,11 @@ func (u *Update) spider() error {
 			// 获取视频信息
 			vInfo, err := u.sdk.VideoWebInfo(video.Bvid)
 			if err != nil {
-				u.logger.Error("get video web info error", zap.String("bvid", video.Bvid), zap.Error(err))
+				if bErr, ok := err.(*bilibili.Error); ok {
+					u.logger.Warn("VideoWebInfo error", zap.String("bvid", video.Bvid), zap.Int("code", bErr.Code), zap.String("message", bErr.Message))
+				} else {
+					u.logger.Error("VideoWebInfo error", zap.String("bvid", video.Bvid), zap.Error(err))
+				}
 				continue
 			}
 
