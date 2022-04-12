@@ -79,6 +79,8 @@ func newDialector(t, dsn string) (gorm.Dialector, error) {
 	}
 }
 
+//DB module 提供DB 和 DBConfig
+
 func Provide() fx.Option {
 	return fx.Provide(NewOptions, NewDatabase)
 }

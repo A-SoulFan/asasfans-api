@@ -86,6 +86,8 @@ func (s *Server) Stop() error {
 	return nil
 }
 
+//提供server module
+
 func Provide() fx.Option {
 	return fx.Provide(NewConfig, NewRouter, NewServer)
 }
