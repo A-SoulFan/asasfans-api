@@ -7,6 +7,8 @@ import (
 	"go.uber.org/fx"
 )
 
+//提供路由服务
+
 func Provide() fx.Option {
 	return fx.Options(
 		router.Provide(),
