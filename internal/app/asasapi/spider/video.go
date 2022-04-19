@@ -144,7 +144,7 @@ func (v *Video) spider() error {
 }
 
 func insertDB(tx *gorm.DB, info *bilibili.VideoInfoResponse, strTag string) error {
-	e := &idl.BilbilVideo{
+	e := &idl.BilibiliVideo{
 		Bvid:      info.Bvid,
 		Aid:       uint64(info.Aid),
 		Name:      info.Owner.Name,
@@ -169,7 +169,7 @@ func insertDB(tx *gorm.DB, info *bilibili.VideoInfoResponse, strTag string) erro
 		Score:     calculateScore(info),
 	}
 
-	if err := repository.NewBilbilVideo(tx).Save(e); err != nil {
+	if err := repository.NewBilibiliVideo(tx).Save(e); err != nil {
 		return err
 	}
 

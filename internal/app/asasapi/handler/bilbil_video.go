@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/apperrors"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/help"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/service"
@@ -10,16 +11,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func BilbilVideoSearch(s *service.BilbilVideo) func(ctx *gin.Context) {
+func BilibiliVideoSearch(s *service.BilbilVideo) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
-		var req idl.BilbilVideoSearchReq
+		var req idl.BilibiliVideoSearchReq
 		if err := ctx.ShouldBindQuery(&req); err != nil {
-			ctx.JSON(http.StatusOK, help.FailureJson(404, err.Error(), nil))
+			_ = ctx.Error(apperrors.NewValidationError(400, err.Error()).Wrap(err))
 			return
 		}
 
 		if resp, err := s.Search(ctx, req); err != nil {
-			ctx.JSON(http.StatusInternalServerError, help.FailureJson(404, err.Error(), nil))
+			_ = ctx.Error(err)
 			return
 		} else {
 			ctx.JSON(http.StatusOK, help.SuccessJson(resp))

@@ -42,11 +42,11 @@ func tnameMaps() map[string][]string {
 	}
 }
 
-func (b *BilbilVideo) Search(ctx context.Context, req idl.BilbilVideoSearchReq) (*idl.BilbilVideoSearchResp, error) {
+func (b *BilbilVideo) Search(ctx context.Context, req idl.BilibiliVideoSearchReq) (*idl.BilibiliVideoSearchResp, error) {
 	queryItems := query_parser.ParseString(strings.Replace(req.Q, " ", "+", -1), strings.Split(allowKeyItems, ",")...)
 
 	if ok, msg := query_parser.Check(queryItems, queryCheck()); !ok {
-		return nil, apperrors.NewError(404, msg)
+		return nil, apperrors.NewValidationError(404, msg)
 	}
 
 	if req.Copyright != 0 {
@@ -68,14 +68,14 @@ func (b *BilbilVideo) Search(ctx context.Context, req idl.BilbilVideoSearchReq) 
 	}
 
 	tx := b.db.WithContext(ctx)
-	bvRepository := repository.NewBilbilVideo(tx)
+	bvRepository := repository.NewBilibiliVideo(tx)
 
 	list, total, err := bvRepository.Search(queryItems, req.Order, req.Page, defaultQuerySize)
 	if err != nil {
 		return nil, err
 	}
 
-	return &idl.BilbilVideoSearchResp{
+	return &idl.BilibiliVideoSearchResp{
 		Page:       req.Page,
 		NumResults: total,
 		Result:     list,

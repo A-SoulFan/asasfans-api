@@ -1,6 +1,20 @@
 http:
   mode: debug # debug, test, release
   port: 8080
+auth:
+  salt: ""
+smsClient:
+  host: "smtp.163.com"
+  port: 465
+  maxConns: 10
+  idleTimeout: 5
+  poolWaitTimeout: 3
+  from: "system <system@xxx.com>"
+  userName: ""
+  password: ""
+  authType: "plain" # login, plain
+  ssl: true
+  insecureSkipVerify: false
 db:
   type: mysql # mysql
   dsn: USER:PASSWORD@tcp(HOST:PORT)/DATABASE?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai

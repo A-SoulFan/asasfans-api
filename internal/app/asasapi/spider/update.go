@@ -70,7 +70,7 @@ func (u *Update) Run(ctx context.Context) error {
 
 func (u *Update) spider() error {
 	tx := u.db.WithContext(context.TODO())
-	repo := repository.NewBilbilVideo(tx)
+	repo := repository.NewBilibiliVideo(tx)
 
 	size := 100
 	for p := 1; true; p++ {

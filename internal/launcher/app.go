@@ -1,6 +1,9 @@
 package launcher
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/config"
 
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/log"
@@ -19,6 +22,10 @@ func Run(app fx.Option) {
 		log.Provide(),
 		fx.WithLogger(func(logger *zap.Logger) fxevent.Logger {
 			return &fxevent.ZapLogger{Logger: logger}
+		}),
+		fx.Invoke(func() {
+			// default
+			rand.Seed(time.Now().UnixNano())
 		}),
 	).Run()
 }

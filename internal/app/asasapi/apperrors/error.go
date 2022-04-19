@@ -34,11 +34,19 @@ func (e *AppError) Wrap(err error) *AppError {
 	return e
 }
 
-func NewError(code int, message string) *AppError {
+func NewError(code int, message string, responseType int) *AppError {
 	return &AppError{
 		err:          nil,
 		Code:         code,
 		Message:      message,
-		ResponseType: UnknownError,
+		ResponseType: responseType,
 	}
+}
+
+func NewValidationError(code int, message string) *AppError {
+	return NewError(code, message, ValidationError)
+}
+
+func NewAuthError(code int, message string) *AppError {
+	return NewError(code, message, AuthError)
 }

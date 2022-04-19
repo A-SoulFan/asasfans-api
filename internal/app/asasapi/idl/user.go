@@ -18,9 +18,23 @@ type User struct {
 	Avatar        uuid.UUID `json:"avatar"`
 	Cover         uuid.UUID `json:"cover"`
 	Nickname      string    `json:"nickname"`
-	RealName      string    `json:"real_name,omitempty"`
 	Password      string    `json:"-"`
-	MobilePhone   string    `json:"mobile_phone,omitempty"`
+	Status        uint8     `json:"status"`
+	Email         string    `json:"email,omitempty"`
+	Gender        uint8     `json:"gender"`
+	Birthday      *int64    `json:"birthday,omitempty"`
+	FollowersNum  uint64    `json:"followers_num"`
+	FollowingsNum uint64    `json:"followings_num"`
+	ShortDesc     string    `json:"short_desc"`
+	CreatedAt     uint64    `json:"created_at"`
+	UpdatedAt     uint64    `json:"updated_at"`
+}
+
+type UserInfoResp struct {
+	Id            uint64    `json:"id"`
+	Avatar        uuid.UUID `json:"avatar"`
+	Cover         uuid.UUID `json:"cover"`
+	Nickname      string    `json:"nickname"`
 	Status        uint8     `json:"status"`
 	Email         string    `json:"email,omitempty"`
 	Gender        uint8     `json:"gender"`
@@ -30,4 +44,12 @@ type User struct {
 	ShortDesc     string    `json:"short_desc"`
 	CreatedAt     uint64    `json:"created_at"`
 	UpdatedAt     uint64    `json:"updated_at"`
+}
+
+type UserRepository interface {
+	Create(u *User) (isNew bool, err error)
+	Update(u *User, fields ...string) error
+
+	FindUserByID(uid uint64) (*User, error)
+	FindUserByEmail(email string) (*User, error)
 }
