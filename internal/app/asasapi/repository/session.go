@@ -26,6 +26,7 @@ func NewSessionMysqlImpl(tx *gorm.DB) idl.TokenStorage {
 }
 
 func (impl *SessionMysqlImpl) Get(key string) (token *idl.Token, err error) {
+	token = &idl.Token{}
 	result := impl.tx.Table(sessionTableName).Where("session_key = ?", key).Select("u_id").Find(&token.UserId)
 	if result.Error != nil {
 		return nil, errors.Wrap(result.Error, fmt.Sprintf("select %s fail", sessionTableName))

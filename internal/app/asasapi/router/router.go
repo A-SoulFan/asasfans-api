@@ -17,6 +17,7 @@ func Provide() fx.Option {
 func InitRouters(
 	bvService *service.BilbilVideo,
 	authService *service.Auth,
+	userService *service.User,
 	errMiddlewares *middlewares.ErrorInterceptor,
 	sessionMiddlewares *middlewares.Session,
 ) httpserver.InitRouters {
@@ -39,7 +40,8 @@ func InitRouters(
 		// User相关
 		usersApi := r.Group("/v2/users").Use(sessionMiddlewares.Handler)
 		{
-			usersApi.GET("/info")
+			usersApi.GET("/info", handler.UserInfo(userService))
+			usersApi.POST("/update", handler.UserUpdate(userService))
 		}
 	}
 }

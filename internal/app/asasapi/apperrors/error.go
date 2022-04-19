@@ -50,3 +50,7 @@ func NewValidationError(code int, message string) *AppError {
 func NewAuthError(code int, message string) *AppError {
 	return NewError(code, message, AuthError)
 }
+
+func NewServiceError(code int, message string) *AppError {
+	return NewError(code, message, ServiceError)
+}

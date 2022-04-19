@@ -75,7 +75,7 @@ func (a *Auth) EmailRegister(ctx context.Context, req idl.EmailRegisterReq) erro
 
 	defer a.cache.Delete(saveCodeKey)
 	if code, isset := a.cache.Get(saveCodeKey); !isset || code != req.VerifyCode {
-		return apperrors.NewValidationError(InviteVerifyCodeError, "无效的验证码")
+		return apperrors.NewValidationError(InvalidVerifyCodeError, "无效的验证码")
 	}
 
 	tx := a.db.WithContext(ctx)
