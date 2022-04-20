@@ -15,22 +15,36 @@ asasfans api支持
 ## 目录结构
 
 ```shell
+├─builder # 构建目录
+│  ├─asasapi
+│  └─asasspider
 ├─cmd # 可执行文件
 │  └─asasapi
 ├─config   # 配置文件
 └─internal # 内部使用
    ├─app   # 具体应用
    │  └─asasapi 
+   │      ├─apperrors
    │      ├─handler # http handler
    │      ├─help    # 助手函数
-   │      └─router  # http router
+   │      ├─idl     # 资源定义
+   │      ├─middlewares # 中间件
+   │      ├─repository
+   │      ├─router  # http router
+   │      ├─service 
+   │      ├─spider 
+   │      └─util 工具库
    ├─launcher  # 基础启动器
    └─pkg   # 第三方依赖封装
-      ├─database
-      ├─httpserver
-      └─log
+      ├─bilibili
+        ├─cache
+        ├─config
+        ├─database
+        ├─httpclient
+        ├─httpserver
+        ├─log
+        └─smsclient
 ```
-
 ## 开始
 
 ### 本地运行
@@ -45,6 +59,8 @@ cd asasfans-api && go mod download
 
 ### Docker builder
 
+#### builder api server
+
 ```shell
 # clone repository
 git clone git@github.com:A-SoulFan/asasfans-api.git
@@ -54,6 +70,9 @@ cd asasfans-api
 # docker builder
 # 如果在 CN 进行 build 请自行将 Dockerfile 中注释的镜像源相关行开启
 docker build --rm -t asasfans-api:latest -f builder/asasapi/Dockerfile .
+
+# spider builder 可选的
+docker build --rm -t asasfans-spider:latest -f builder/asasspider/Dockerfile .
 
 # copy config file 并自行修改相关配置
 cp config/config.template.yml config/asasapi.yml
