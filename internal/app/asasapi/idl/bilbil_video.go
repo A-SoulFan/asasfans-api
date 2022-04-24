@@ -44,6 +44,9 @@ type BilibiliVideo struct {
 	Share     uint64 `json:"share"`
 	Like      uint64 `json:"like"`
 	Score     uint64 `json:"score"`
+	Status    uint8  `json:"status"`
+	CreatedAt uint64 `json:"created_at"`
+	UpdatedAt uint64 `json:"updated_at"`
 }
 
 type BilibiliVideoOrder string
