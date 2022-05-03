@@ -18,6 +18,8 @@ const (
 	bilibiliVideoTagTableName = "bilbil_video_tag"
 
 	preAliasString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	onUpdateFields = "name,mid,face,tid,tname,copyright,title,desc,pic,tag,pubdate,duration,view,danmaku,reply,favorite,coin,share,like,score,updated_at"
 )
 
 func NewBilibiliVideo(tx *gorm.DB) idl.BilibiliVideoRepository {
@@ -64,6 +66,7 @@ func (impl *BilibiliVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, 
 	}
 
 	resp = builderQueryItems(impl.tx, queryItems).Table(bilibiliVideoTableName).
+		Where(fmt.Sprintf("%s.status = ?", bilibiliVideoTableName), idl.BilibiliVideoEnabledStatus).
 		Select(fmt.Sprintf("%s.id", bilibiliVideoTableName)).
 		Count(&total)
 
@@ -120,7 +123,7 @@ func (impl *BilibiliVideoMysqlImpl) Save(e *idl.BilibiliVideo) error {
 	return impl.tx.Transaction(func(_tx *gorm.DB) error {
 		result := _tx.Table(bilibiliVideoTableName).Clauses(clause.OnConflict{
 			Columns:   []clause.Column{{Name: "bvid"}},
-			UpdateAll: true,
+			DoUpdates: clause.AssignmentColumns(strings.Split(onUpdateFields, ",")),
 		}).Create(&e)
 
 		if result.Error != nil {

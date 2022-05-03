@@ -167,6 +167,7 @@ func insertDB(tx *gorm.DB, info *bilibili.VideoInfoResponse, strTag string) erro
 		Share:     uint64(info.Stat.Share),
 		Like:      uint64(info.Stat.Like),
 		Score:     calculateScore(info),
+		Status:    idl.BilibiliVideoEnabledStatus,
 	}
 
 	if err := repository.NewBilibiliVideo(tx).Save(e); err != nil {
