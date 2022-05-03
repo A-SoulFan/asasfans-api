@@ -20,6 +20,11 @@ type BilibiliVideoSearchResp struct {
 	Result     []*BilibiliVideo `json:"result"`
 }
 
+const (
+	BilibiliVideoEnabledStatus  = 1
+	BilibiliVideoDisabledStatus = 0
+)
+
 type BilibiliVideo struct {
 	Id        uint64 `json:"-"`
 	Bvid      string `json:"bvid"`
@@ -45,8 +50,8 @@ type BilibiliVideo struct {
 	Like      uint64 `json:"like"`
 	Score     uint64 `json:"score"`
 	Status    uint8  `json:"status"`
-	CreatedAt uint64 `json:"created_at"`
-	UpdatedAt uint64 `json:"updated_at"`
+	CreatedAt uint64 `json:"created_at" gorm:"autoCreateTime"`
+	UpdatedAt uint64 `json:"updated_at" gorm:"autoUpdateTime"`
 }
 
 type BilibiliVideoOrder string

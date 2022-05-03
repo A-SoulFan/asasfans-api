@@ -53,6 +53,7 @@ func (impl *BilibiliVideoMysqlImpl) FindAllByPubDate(from, to time.Time, page, s
 
 func (impl *BilibiliVideoMysqlImpl) Search(queryItems []query_parser.QueryItem, order idl.BilibiliVideoOrder, page, size int64) (list []*idl.BilibiliVideo, total int64, err error) {
 	resp := builderQueryItems(impl.tx, queryItems).Table(bilibiliVideoTableName).
+		Where(fmt.Sprintf("%s.status = ?", bilibiliVideoTableName), idl.BilibiliVideoEnabledStatus).
 		Select(fmt.Sprintf("%s.*", bilibiliVideoTableName)).
 		Order(fmt.Sprintf("%s DESC", order)).
 		Offset(int((page - 1) * size)).Limit(int(size)).
