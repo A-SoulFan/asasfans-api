@@ -21,6 +21,18 @@ const (
 	typeSave = "SAVE_VERIFY_CODE"
 )
 
+const (
+	codeMailTmpl = `
+嗨 %s!
+
+你的验证码为 [%s].
+
+请在网页中输入您的验证码完成验证.
+
+asasfans
+`
+)
+
 type Auth struct {
 	db            *gorm.DB
 	cache         cache.ICache
@@ -62,7 +74,7 @@ func (a *Auth) SendEmailVerifyCode(ctx context.Context, req idl.SendEmailVerifyC
 		return err
 	}
 
-	if err := a.smsClient.SendHTML(req.Email, verifyCode, "邮箱验证码"); err != nil {
+	if err := a.smsClient.SendHTML(req.Email, fmt.Sprintf(codeMailTmpl, req.Email, verifyCode), "邮箱验证码"); err != nil {
 		_ = a.cache.Delete(saveCodeKey)
 		return err
 	}
@@ -151,7 +163,7 @@ func (a *Auth) EmailRestPassword(ctx context.Context, req idl.RestPasswordReq) e
 
 func DefaultNewUser(email string) *idl.User {
 	return &idl.User{
-		Nickname:  "新用户",
+		Nickname:  email,
 		Email:     email,
 		Gender:    idl.UserGenderDefault,
 		Birthday:  nil,
