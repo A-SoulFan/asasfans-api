@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/spider/video_analysis"
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -18,14 +19,16 @@ type Update struct {
 	db       *gorm.DB
 	logger   *zap.Logger
 	sdk      *bilibili.SDK
+	analysis *video_analysis.Analysis
 }
 
-func NewUpdate(db *gorm.DB, logger *zap.Logger, sdk *bilibili.SDK) *Update {
+func NewUpdate(db *gorm.DB, logger *zap.Logger, sdk *bilibili.SDK, analysis *video_analysis.Analysis) *Update {
 	return &Update{
 		stopChan: make(chan bool),
 		db:       db,
 		logger:   logger,
 		sdk:      sdk,
+		analysis: analysis,
 	}
 }
 
@@ -104,8 +107,16 @@ func (u *Update) spider() error {
 			}
 			tags = tagInfos.ToTagStringSlice()
 
+			// update时不具备资格则下架
+			if isSkip(tags, strconv.Itoa(vInfo.Owner.Mid), u.analysis) {
+				if err := repository.NewBilibiliVideo(tx).Shield(vInfo.Bvid); err != nil {
+					u.logger.Error("update error", zap.String("bvid", video.Bvid), zap.Error(err))
+				}
+				continue
+			}
+
 			if err := insertDB(tx, vInfo, strings.Join(tags, ",")); err != nil {
-				u.logger.Error("insertDB error", zap.String("bvid", video.Bvid))
+				u.logger.Error("insertDB error", zap.String("bvid", video.Bvid), zap.Error(err))
 			}
 		}
 

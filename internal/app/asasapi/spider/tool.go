@@ -3,11 +3,13 @@ package spider
 import (
 	"strings"
 
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/spider/video_analysis"
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 )
 
 const (
-	allowTags = "嘉然,向晚,贝拉,珈乐,乃琳,阿草,嘉心糖,嘉然今天吃什么,A-SOUL,a-soul,传说的世界,向晚大魔王,顶晚人,乃琳Queen,乃淇琳,贝拉kira,贝极星,珈乐Carol,ASOUL,asoul,GNK48,超级敏感,传说的世界,A-SOUL二创激励计划,乃贝,嘉晚饭,果丹皮,琳嘉"
+	allowMinScore = 80
+	allowTags     = "嘉然,向晚,贝拉,珈乐,乃琳,阿草,嘉心糖,嘉然今天吃什么,A-SOUL,a-soul,传说的世界,向晚大魔王,顶晚人,乃琳Queen,乃淇琳,贝拉kira,贝极星,珈乐Carol,ASOUL,asoul,GNK48,超级敏感,传说的世界,A-SOUL二创激励计划,乃贝,嘉晚饭,果丹皮,琳嘉"
 )
 
 func calculateScore(info *bilibili.VideoInfoResponse) uint64 {
@@ -19,18 +21,19 @@ func calculateScore(info *bilibili.VideoInfoResponse) uint64 {
 }
 
 // isSkip 判断是否需要跳过此条
-func isSkip(sInfo bilibili.VideoSearchInfo, keyword string) bool {
-	tags := strings.Split(sInfo.Tag, ",")
-	// 防止错误的收录不属于 keyword 的内容
-	for _, tag := range tags {
-		for _, allowTag := range strings.Split(allowTags, ",") {
-			if tag == allowTag || tag == keyword {
-				return false
-			}
-		}
+// 防止错误的收录不属于 keyword 的内容
+func isSkip(tags []string, mid string, analysis *video_analysis.Analysis) bool {
+	score := analysis.Calculate(video_analysis.Mid, mid)
+	// 黑名单用户
+	if score < 0 {
+		return true
 	}
 
-	return true
+	for _, tag := range tags {
+		score += analysis.Calculate(video_analysis.Tag, tag)
+	}
+
+	return score <= allowMinScore
 }
 
 func tagStrToSlice(tagStr, title string) []string {

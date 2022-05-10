@@ -64,6 +64,7 @@ const (
 
 type BilibiliVideoRepository interface {
 	Save(e *BilibiliVideo) error
+	Shield(bvid string) error
 
 	FindAllByBvidList(bvidList []string) (list []*BilibiliVideo, err error)
 	FindAllByPubDate(from time.Time, to time.Time, page, size int64) (list []*BilibiliVideo, total int64, err error)

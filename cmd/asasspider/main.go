@@ -2,7 +2,9 @@ package main
 
 import (
 	"context"
+
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/spider"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/spider/video_analysis"
 	"github.com/A-SoulFan/asasfans-api/internal/launcher"
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/database"
@@ -16,6 +18,7 @@ func main() {
 func newSpider() fx.Option {
 	return fx.Options(
 		database.Provide(),
+		video_analysis.Provide(),
 		fx.Provide(spider.NewVideo),
 		fx.Provide(spider.NewUpdate),
 		fx.Provide(bilibili.NewSDK),

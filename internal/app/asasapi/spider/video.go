@@ -10,6 +10,7 @@ import (
 
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/idl"
 	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/repository"
+	"github.com/A-SoulFan/asasfans-api/internal/app/asasapi/spider/video_analysis"
 	"github.com/A-SoulFan/asasfans-api/internal/pkg/bilibili"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -28,15 +29,17 @@ type Video struct {
 	db        *gorm.DB
 	logger    *zap.Logger
 	sdk       *bilibili.SDK
+	analysis  *video_analysis.Analysis
 	isRunning bool
 }
 
-func NewVideo(db *gorm.DB, logger *zap.Logger, sdk *bilibili.SDK) *Video {
+func NewVideo(db *gorm.DB, logger *zap.Logger, sdk *bilibili.SDK, analysis *video_analysis.Analysis) *Video {
 	return &Video{
 		stopChan: make(chan bool),
 		db:       db,
 		logger:   logger,
 		sdk:      sdk,
+		analysis: analysis,
 	}
 }
 
@@ -111,7 +114,7 @@ func (v *Video) spider() error {
 					return nil
 				}
 
-				if isSkip(sInfo, keyword) {
+				if isSkip(strings.Split(sInfo.Tag, ","), strconv.Itoa(sInfo.Mid), v.analysis) {
 					continue
 				}
 

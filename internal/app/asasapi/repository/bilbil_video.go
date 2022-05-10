@@ -119,6 +119,18 @@ func builderQueryItems(tx *gorm.DB, queryItems []query_parser.QueryItem) *gorm.D
 	return tx
 }
 
+func (impl *BilibiliVideoMysqlImpl) Shield(bvid string) error {
+	result := impl.tx.Table(bilibiliVideoTableName).
+		Where("bvid = ? AND status = ?", bvid, idl.BilibiliVideoEnabledStatus).
+		UpdateColumn("status", idl.BilibiliVideoDisabledStatus)
+
+	if result.Error != nil {
+		return errors.Wrap(result.Error, fmt.Sprintf("update %s fail", bilibiliVideoTableName))
+	}
+
+	return nil
+}
+
 func (impl *BilibiliVideoMysqlImpl) Save(e *idl.BilibiliVideo) error {
 	return impl.tx.Transaction(func(_tx *gorm.DB) error {
 		result := _tx.Table(bilibiliVideoTableName).Clauses(clause.OnConflict{
