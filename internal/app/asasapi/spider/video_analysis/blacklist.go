@@ -6,28 +6,38 @@ import (
 )
 
 type Blacklist struct {
+	db           *gorm.DB
 	blacklistMap map[string]int
 }
 
 func NewBlacklist(db *gorm.DB) (*Blacklist, error) {
-	blacklist := &Blacklist{map[string]int{}}
+	blacklist := &Blacklist{
+		db:           db,
+		blacklistMap: map[string]int{},
+	}
 
+	return blacklist, nil
+}
+
+func (b *Blacklist) init() error {
 	type Storage struct {
 		Key   string
 		Score int
 	}
 
 	var list []*Storage
-	result := db.Table("video_analysis").Where("type = ?", Mid).Find(&list)
+	result := b.db.Table("video_analysis").Where("type = ?", Mid).Find(&list)
 	if result.Error != nil {
-		return nil, errors.Wrap(result.Error, "select video_analysis error")
+		return errors.Wrap(result.Error, "select video_analysis error")
 	}
 
+	blacklistMap := map[string]int{}
 	for _, storage := range list {
-		blacklist.blacklistMap[storage.Key] = storage.Score
+		blacklistMap[storage.Key] = storage.Score
 	}
 
-	return blacklist, nil
+	b.blacklistMap = blacklistMap
+	return nil
 }
 
 func (b *Blacklist) GetKeyType() string {
@@ -39,4 +49,8 @@ func (b *Blacklist) GetScore(value string) int {
 		return v
 	}
 	return 0
+}
+
+func (b *Blacklist) Reload() error {
+	return b.init()
 }

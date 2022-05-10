@@ -6,28 +6,40 @@ import (
 )
 
 type TagScore struct {
+	db    *gorm.DB
 	tsMap map[string]int
 }
 
 func NewTagScore(db *gorm.DB) (*TagScore, error) {
-	tagScore := &TagScore{tsMap: map[string]int{}}
+	tagScore := &TagScore{
+		db:    db,
+		tsMap: map[string]int{},
+	}
+	if err := tagScore.init(); err != nil {
+		return nil, err
+	}
+	return tagScore, nil
+}
 
+func (ts *TagScore) init() error {
 	type Storage struct {
 		Key   string
 		Score int
 	}
 
 	var list []*Storage
-	result := db.Table("video_analysis").Where("type = ?", Tag).Find(&list)
+	result := ts.db.Table("video_analysis").Where("type = ?", Tag).Find(&list)
 	if result.Error != nil {
-		return nil, errors.Wrap(result.Error, "select video_analysis error")
+		return errors.Wrap(result.Error, "select video_analysis error")
 	}
 
+	tsMap := map[string]int{}
 	for _, storage := range list {
-		tagScore.tsMap[storage.Key] = storage.Score
+		tsMap[storage.Key] = storage.Score
 	}
 
-	return tagScore, nil
+	ts.tsMap = tsMap
+	return nil
 }
 
 func (ts *TagScore) GetKeyType() string {
@@ -39,4 +51,8 @@ func (ts *TagScore) GetScore(value string) int {
 		return v
 	}
 	return 0
+}
+
+func (ts *TagScore) Reload() error {
+	return ts.init()
 }
